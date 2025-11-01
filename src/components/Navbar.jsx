@@ -10,7 +10,7 @@ function Navbar() {
             <img
               src="/final_logo_2.png"
               alt="AuraStore"
-              className="h-12 w-200"
+              className="h-11 w-auto"
             />
           </Link>
 

@@ -2,15 +2,15 @@ import ProductCard from '../components/ProductCard'
 
 function AllProducts() {
   const products = [
-    { id: 1, name: 'Oversized Hoodie', price: 89, category: 'Upper Wear' },
-    { id: 2, name: 'Slim Fit Jeans', price: 129, category: 'Lower Wear' },
-    { id: 3, name: 'Air Max Sneakers', price: 159, category: 'Sneakers' },
-    { id: 4, name: 'Graphic Tee', price: 39, category: 'Upper Wear' },
-    { id: 5, name: 'Cargo Pants', price: 149, category: 'Lower Wear' },
-    { id: 6, name: 'Canvas Shoes', price: 89, category: 'Sneakers' },
-    { id: 7, name: 'Bomber Jacket', price: 199, category: 'Upper Wear' },
-    { id: 8, name: 'Joggers', price: 79, category: 'Lower Wear' },
-    { id: 9, name: 'High-Top Sneakers', price: 119, category: 'Sneakers' }
+    { id: 1, name: 'Oversized Hoodie', price: 8900, category: 'Upper Wear' },
+    { id: 2, name: 'Slim Fit Jeans', price: 12900, category: 'Lower Wear' },
+    { id: 3, name: 'Air Max Sneakers', price: 1590, category: 'Sneakers' },
+    { id: 4, name: 'Graphic Tee', price: 3900, category: 'Upper Wear' },
+    { id: 5, name: 'Cargo Pants', price: 1490, category: 'Lower Wear' },
+    { id: 6, name: 'Canvas Shoes', price: 8900, category: 'Sneakers' },
+    { id: 7, name: 'Bomber Jacket', price: 1990, category: 'Upper Wear' },
+    { id: 8, name: 'Joggers', price: 7900, category: 'Lower Wear' },
+    { id: 9, name: 'High-Top Sneakers', price: 1190, category: 'Sneakers' }
   ]
 
   return (

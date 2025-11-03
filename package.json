@@ -2,7 +2,6 @@
   "name": "aurasphere",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -10,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "express": "^5.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.5"
@@ -27,5 +27,18 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.18",
     "vite": "^7.1.7"
-  }
+  },
+  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aditya44860/AuraStore.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Aditya44860/AuraStore/issues"
+  },
+  "homepage": "https://github.com/Aditya44860/AuraStore#readme"
 }

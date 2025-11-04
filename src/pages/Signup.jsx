@@ -1,29 +1,72 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function Signup() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const { login } = useAuth()
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    login({ name, email })
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        login(data.user);
+        navigate('/');
+      } else {
+        setError(data.message || 'Registration failed');
+      }
+    } catch (error) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-      <Link to="/" className="absolute top-6 left-6 text-white hover:text-gray-300 transition z-10">
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      <Link
+        to="/"
+        className="absolute top-6 left-6 text-white hover:text-gray-300 transition z-10"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
         </svg>
       </Link>
       <div className="hidden lg:flex flex-1 items-center justify-center p-8">
         <div className="text-center text-white">
           <h1 className="text-5xl font-bold mb-6">Join AuraStore</h1>
-          <p className="text-xl text-gray-300 mb-8">Start your fashion journey today</p>
+          <p className="text-xl text-gray-300 mb-8">
+            Start your fashion journey today
+          </p>
           <div className="space-y-4 max-w-sm">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 flex items-center space-x-4">
               <div className="text-2xl">🎯</div>
@@ -36,34 +79,52 @@ function Signup() {
               <div className="text-2xl">🏆</div>
               <div className="text-left">
                 <p className="font-semibold">Exclusive Access</p>
-                <p className="text-sm text-gray-300">Early access to new drops</p>
+                <p className="text-sm text-gray-300">
+                  Early access to new drops
+                </p>
               </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 flex items-center space-x-4">
               <div className="text-2xl">💰</div>
               <div className="text-left">
                 <p className="font-semibold">Member Rewards</p>
-                <p className="text-sm text-gray-300">Earn points on every purchase</p>
+                <p className="text-sm text-gray-300">
+                  Earn points on every purchase
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
-      
+
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-2xl p-8 transform hover:scale-105 transition-transform duration-300">
             <div className="text-center mb-8">
-              <Link to="/" className="inline-block mb-6">
-                <img src="/final_logo_2.png" alt="AuraStore" className="h-12 mx-auto" />
-              </Link>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
-              <p className="text-gray-600">Join our community of style enthusiasts</p>
+              <img
+                src="/final_logo_2.png"
+                alt="AuraStore"
+                className="h-12 mx-auto mb-6"
+              />
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Create Account
+              </h2>
+              <p className="text-gray-600">
+                Join our community of style enthusiasts
+              </p>
             </div>
-            
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4">
+                {error}
+              </div>
+            )}
+
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name
+                </label>
                 <input
                   type="text"
                   value={name}
@@ -73,9 +134,11 @@ function Signup() {
                   required
                 />
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
                 <input
                   type="email"
                   value={email}
@@ -85,9 +148,11 @@ function Signup() {
                   required
                 />
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
                 <input
                   type="password"
                   value={password}
@@ -97,19 +162,23 @@ function Signup() {
                   required
                 />
               </div>
-              
+
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Account
+                {loading ? 'Creating Account...' : 'Create Account'}
               </button>
             </form>
-            
+
             <div className="mt-6 text-center">
               <p className="text-gray-600">
-                Already have an account?{' '}
-                <Link to="/login" className="text-purple-600 font-semibold hover:underline">
+                Already have an account?{" "}
+                <Link
+                  to="/login"
+                  className="text-purple-600 font-semibold hover:underline"
+                >
                   Sign in
                 </Link>
               </p>
@@ -118,7 +187,7 @@ function Signup() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Signup
+export default Signup;

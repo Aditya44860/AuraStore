@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 
 const AuthContext = createContext()
 
@@ -9,6 +9,36 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      // Verify token with backend
+      fetch('http://localhost:3001/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.user) {
+          setIsLoggedIn(true)
+          setUser(data.user)
+        } else {
+          localStorage.removeItem('token')
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('token')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+    } else {
+      setLoading(false)
+    }
+  }, [])
 
   const login = (userData) => {
     setIsLoggedIn(true)
@@ -18,13 +48,15 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setIsLoggedIn(false)
     setUser(null)
+    localStorage.removeItem('token')
   }
 
   const value = {
     isLoggedIn,
     user,
     login,
-    logout
+    logout,
+    loading
   }
 
   return (

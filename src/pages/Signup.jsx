@@ -48,7 +48,7 @@ function Signup() {
       {/* Back button */}
       <Link
         to="/"
-        className="absolute top-6 left-6 text-white hover:text-gray-300 transition z-10"
+        className="absolute top-6 left-6 text-white hover:text-gray-300 transition z-50"
       >
         <svg
           className="w-6 h-6"

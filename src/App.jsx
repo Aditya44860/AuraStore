@@ -2,7 +2,7 @@ import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Profile from './pages/Profile'
 import UpperWear from './pages/UpperWear'
-import LowerWear from './pages/LowerWear'
+import BottomWear from './pages/BottomWear'
 import Sneakers from './pages/Sneakers'
 import Sale from './pages/Sale'
 import AllProducts from './pages/AllProducts'
@@ -17,7 +17,7 @@ const router = createBrowserRouter([
   { path: '/', element: <><Navbar /><Home /></> },
   { path: '/profile', element: <><Navbar /><Profile /></> },
   { path: '/upper-wear', element: <><Navbar /><UpperWear /></> },
-  { path: '/bottom-wear', element: <><Navbar /><LowerWear /></> },
+  { path: '/bottom-wear', element: <><Navbar /><BottomWear /></> },
   { path: '/sneakers', element: <><Navbar /><Sneakers /></> },
   { path: '/sale', element: <><Navbar /><Sale /></> },
   { path: '/all-products', element: <><Navbar /><AllProducts /></> },

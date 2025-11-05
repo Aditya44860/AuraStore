@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import SearchBox from "./SearchBox";
 import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
@@ -6,6 +6,7 @@ import { useState } from "react";
 function Navbar() {
   const { isLoggedIn, user, login, logout } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
+  const location = useLocation()
 
   const handleLogin = () => {
     login({ name: 'John Doe', email: 'john@example.com' })
@@ -27,33 +28,53 @@ function Navbar() {
           <div className="hidden lg:flex items-center space-x-10">
             <Link
               to="/upper-wear"
-              className="text-sm font-medium text-gray-800 hover:text-black transition uppercase tracking-wide"
+              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
+                location.pathname === '/upper-wear' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
+              }`}
+              style={location.pathname === '/upper-wear' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
             >
               UPPER WEAR
+
             </Link>
             <Link
               to="/bottom-wear"
-              className="text-sm font-medium text-gray-800 hover:text-black transition uppercase tracking-wide"
+              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
+                location.pathname === '/bottom-wear' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
+              }`}
+              style={location.pathname === '/bottom-wear' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
             >
               BOTTOM WEAR
+
             </Link>
             <Link
               to="/sneakers"
-              className="text-sm font-medium text-gray-800 hover:text-black transition uppercase tracking-wide"
+              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
+                location.pathname === '/sneakers' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
+              }`}
+              style={location.pathname === '/sneakers' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
             >
               SNEAKERS
+
             </Link>
             <Link
               to="/sale"
-              className="text-sm font-medium text-red-600 hover:text-red-700 transition uppercase tracking-wide"
+              className={`text-sm font-medium hover:text-red-700 transition uppercase tracking-wide relative ${
+                location.pathname === '/sale' ? 'text-red-700 transform translate-y-[-2px]' : 'text-red-600'
+              }`}
+              style={location.pathname === '/sale' ? {textShadow: '0 3px 6px rgba(220, 38, 38, 0.4)'} : {}}
             >
               SALE
+
             </Link>
             <Link
               to="/all-products"
-              className="text-sm font-medium text-gray-800 hover:text-black transition uppercase tracking-wide"
+              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
+                location.pathname === '/all-products' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
+              }`}
+              style={location.pathname === '/all-products' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
             >
               ALL PRODUCTS
+
             </Link>
           </div>
 

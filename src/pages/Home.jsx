@@ -50,7 +50,9 @@ function Home() {
   }, []);
 
   return (
-    <div className="bg-white">
+    <div style={{backgroundImage: 'url(/website_background.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed'}}>
+      <div className="absolute inset-0 bg-white/50"></div>
+      <div className="relative z-10">
       {/* Hero Carousel */}
       <HeroCarousel />
 
@@ -64,7 +66,7 @@ function Home() {
             id="welcome-heading"
           >
             Welcome to AuraStore
-            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-400 via-gray-600 to-gray-400 opacity-60 underline-bar"></div>
+            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-600 via-purple-600 to-red-600 underline-bar"></div>
           </h2>
 
           <style>{`
@@ -179,10 +181,10 @@ function Home() {
         {/* Gradient and text */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-center justify-center text-center">
           <div className="text-white">
-            <h3 className="text-4xl font-bold mb-3">
+            <h3 className="text-4xl font-bold mb-3" style={{textShadow: '0 0 60px rgba(255, 255, 255, 1), 0 0 120px rgba(255, 255, 255, 0.8), 0 0 180px rgba(255, 255, 255, 0.6)'}}>
               Premium Quality Guaranteed
             </h3>
-            <p className="text-lg text-gray-200">
+            <p className="text-lg text-gray-200" style={{textShadow: '0 0 50px rgba(255, 255, 255, 0.9), 0 0 100px rgba(255, 255, 255, 0.7), 0 0 150px rgba(255, 255, 255, 0.5)'}}>
               Crafted with the finest materials for lasting comfort and
               confidence
             </p>
@@ -274,6 +276,7 @@ function Home() {
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 }

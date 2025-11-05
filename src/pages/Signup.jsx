@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { StarsBackground } from "../components/animate-ui/components/backgrounds/stars.jsx";
 
 function Signup() {
   const [name, setName] = useState("");
@@ -17,10 +18,10 @@ function Signup() {
     setError("");
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/register', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3001/api/auth/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ name, email, password }),
       });
@@ -28,21 +29,23 @@ function Signup() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('token', data.token);
+        localStorage.setItem("token", data.token);
         login(data.user);
-        navigate('/');
+        navigate("/");
       } else {
-        setError(data.message || 'Registration failed');
+        setError(data.message || "Registration failed");
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <StarsBackground className="min-h-screen flex bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+
+      {/* Back button */}
       <Link
         to="/"
         className="absolute top-6 left-6 text-white hover:text-gray-300 transition z-10"
@@ -61,22 +64,33 @@ function Signup() {
           />
         </svg>
       </Link>
-      <div className="hidden lg:flex flex-1 items-center justify-center p-8">
+
+      {/* Left side info section */}
+      <div className="hidden lg:flex flex-1 items-center justify-center p-8 relative z-10">
         <div className="text-center text-white">
-          <h1 className="text-5xl font-bold mb-6">Join AuraStore</h1>
+          <h1 className="text-5xl font-bold mb-6 animate-pulse">Join AuraStore</h1>
           <p className="text-xl text-gray-300 mb-8">
             Start your fashion journey today
           </p>
-          <div className="space-y-4 max-w-sm">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 flex items-center space-x-4">
-              <div className="text-2xl">🎯</div>
+          <div className="space-y-4 max-w-sm mx-auto">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 flex items-center space-x-4 hover:scale-105 transition-transform duration-300">
+              <div className="text-white">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              </div>
               <div className="text-left">
                 <p className="font-semibold">Personalized Style</p>
                 <p className="text-sm text-gray-300">Curated just for you</p>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 flex items-center space-x-4">
-              <div className="text-2xl">🏆</div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 flex items-center space-x-4 hover:scale-105 transition-transform duration-300">
+              <div className="text-white">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+              </div>
               <div className="text-left">
                 <p className="font-semibold">Exclusive Access</p>
                 <p className="text-sm text-gray-300">
@@ -84,8 +98,13 @@ function Signup() {
                 </p>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 flex items-center space-x-4">
-              <div className="text-2xl">💰</div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 flex items-center space-x-4 hover:scale-105 transition-transform duration-300">
+              <div className="text-white">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+                </svg>
+              </div>
               <div className="text-left">
                 <p className="font-semibold">Member Rewards</p>
                 <p className="text-sm text-gray-300">
@@ -97,7 +116,8 @@ function Signup() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-8">
+      {/* Right side signup form */}
+      <div className="flex-1 flex items-center justify-center p-8 relative z-10">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-2xl p-8 transform hover:scale-105 transition-transform duration-300">
             <div className="text-center mb-8">
@@ -168,7 +188,7 @@ function Signup() {
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Creating Account...' : 'Create Account'}
+                {loading ? "Creating Account..." : "Create Account"}
               </button>
             </form>
 
@@ -186,7 +206,7 @@ function Signup() {
           </div>
         </div>
       </div>
-    </div>
+    </StarsBackground>
   );
 }
 

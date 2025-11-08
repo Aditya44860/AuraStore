@@ -21,15 +21,15 @@ function Home() {
 
     // Send email in background
     try {
-      await fetch('http://localhost:3001/api/subscribe', {
-        method: 'POST',
+      await fetch("http://localhost:3001/api/subscribe", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email: emailToSend }),
       });
     } catch (error) {
-      console.error('Email sending failed:', error);
+      console.error("Email sending failed:", error);
     }
   };
 
@@ -94,7 +94,7 @@ function Home() {
         <ScrollingText />
 
         {/* Featured Collections */}
-        <motion.section 
+        <motion.section
           className="py-12 bg-gray-50"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -103,7 +103,7 @@ function Home() {
         >
           <div className="max-w-6xl mx-auto px-4 text-center">
             <motion.h2
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 relative inline-block animated-heading"
+              className="text-2xl sm:text-3xl lg:text-5xl font-bold text-gray-900 mb-3 relative inline-block animated-heading"
               id="welcome-heading"
               initial={{ y: 30, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
@@ -139,7 +139,7 @@ function Home() {
             }
           `}</style>
 
-            <motion.p 
+            <motion.p
               className="text-gray-600 text-sm sm:text-base lg:text-lg max-w-2xl mt-6 sm:mt-8 mx-auto mb-6 sm:mb-8 px-4 sm:px-0"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -157,7 +157,7 @@ function Home() {
               are with confidence.
             </motion.p>
 
-            <motion.button 
+            <motion.button
               className="bg-black text-white px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base rounded-full font-semibold hover:bg-gray-800 transition"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -171,7 +171,7 @@ function Home() {
         </motion.section>
 
         {/* Best Sellers */}
-        <motion.section 
+        <motion.section
           className="py-12 bg-white"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -179,8 +179,8 @@ function Home() {
           viewport={{ once: true }}
         >
           <div className="max-w-7xl mx-auto px-4">
-            <motion.h2 
-              className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-900 relative inline-block animated-heading"
+            <motion.h2
+              className="text-2xl sm:text-3xl lg:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-900 relative inline-block animated-heading"
               initial={{ y: 30, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5 }}
@@ -190,11 +190,11 @@ function Home() {
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-400 via-gray-600 to-gray-400 opacity-60 underline-bar"></div>
             </motion.h2>
             <div className="overflow-x-auto pb-4">
-              <div className="flex space-x-4 w-max">
+              <div className="flex space-x-4 w-max lg:grid lg:grid-cols-3 lg:grid-flow-col lg:auto-cols-max ">
                 {bestSellers.map((product, index) => (
                   <motion.div
                     key={product.id}
-                    className="w-48 sm:w-56 flex-shrink-0"
+                    className="w-48 sm:w-56 lg:w-80 flex-shrink-0"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -215,7 +215,7 @@ function Home() {
         </motion.section>
 
         {/* New Arrivals */}
-        <motion.section 
+        <motion.section
           className="py-12 bg-gray-50"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -223,8 +223,8 @@ function Home() {
           viewport={{ once: true }}
         >
           <div className="max-w-7xl mx-auto px-4">
-            <motion.h2 
-              className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-900 relative inline-block animated-heading"
+            <motion.h2
+              className="text-2xl sm:text-3xl lg:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-900 relative inline-block animated-heading"
               initial={{ y: 30, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5 }}
@@ -234,11 +234,11 @@ function Home() {
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-400 via-gray-600 to-gray-400 opacity-60 underline-bar"></div>
             </motion.h2>
             <div className="overflow-x-auto pb-4">
-              <div className="flex space-x-4 w-max">
+              <div className="flex space-x-4 w-max lg:grid lg:grid-cols-3 lg:grid-flow-col lg:auto-cols-max ">
                 {newArrivals.map((product, index) => (
                   <motion.div
                     key={product.id}
-                    className="w-48 sm:w-56 flex-shrink-0"
+                    className="w-48 sm:w-56 lg:w-80 flex-shrink-0"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -293,7 +293,8 @@ function Home() {
                 Premium Quality Guaranteed
               </h3>
               <p className="text-sm sm:text-base lg:text-lg text-gray-200">
-                Crafted with the finest materials for lasting comfort and confidence
+                Crafted with the finest materials for lasting comfort and
+                confidence
               </p>
             </div>
           </div>
@@ -333,7 +334,7 @@ function Home() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
-              <motion.div 
+              <motion.div
                 className="bg-white/5 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -390,7 +391,7 @@ function Home() {
                 </div>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="bg-white/5 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -405,7 +406,10 @@ function Home() {
                   Get early access to drops, exclusive offers, and trend
                   updates. Be part of the AuraStore family.
                 </p>
-                <form onSubmit={handleSubscribe} className="flex flex-col gap-3">
+                <form
+                  onSubmit={handleSubscribe}
+                  className="flex flex-col gap-3"
+                >
                   <div className="relative">
                     <input
                       type="email"
@@ -418,16 +422,36 @@ function Home() {
                     {showTick && (
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-all duration-2000 opacity-100 animate-tick-glow">
                         <div className="relative">
-                          <svg className="w-6 h-6 text-white drop-shadow-xl animate-scale-in" fill="currentColor" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" fill="#000" className="animate-pulse" />
-                            <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                          <svg
+                            className="w-6 h-6 text-white drop-shadow-xl animate-scale-in"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              fill="#000"
+                              className="animate-pulse"
+                            />
+                            <path
+                              d="M9 12l2 2 4-4"
+                              stroke="white"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              fill="none"
+                            />
                           </svg>
                           <div className="absolute inset-0 rounded-full bg-black opacity-20 blur-md animate-ping"></div>
                         </div>
                       </div>
                     )}
                   </div>
-                  <button type="submit" className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-gray-200 hover:scale-105 transition-all duration-200 relative overflow-hidden group text-sm sm:text-base">
+                  <button
+                    type="submit"
+                    className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-gray-200 hover:scale-105 transition-all duration-200 relative overflow-hidden group text-sm sm:text-base"
+                  >
                     <span className="relative z-10">Subscribe</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-white translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
                   </button>
@@ -437,7 +461,7 @@ function Home() {
           </div>
         </section>
       </div>
-      
+
       <style jsx>{`
         @keyframes scale-in {
           0% {
@@ -453,7 +477,7 @@ function Home() {
             opacity: 1;
           }
         }
-        
+
         @keyframes tick-glow {
           0% {
             opacity: 0;
@@ -472,11 +496,11 @@ function Home() {
             transform: translateY(-50%) scale(0.9);
           }
         }
-        
+
         .animate-scale-in {
           animation: scale-in 0.6s ease-out;
         }
-        
+
         .animate-tick-glow {
           animation: tick-glow 2s ease-out forwards;
         }

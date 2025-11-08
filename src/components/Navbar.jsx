@@ -18,10 +18,10 @@ function Navbar() {
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center h-16 sm:h-20">
-          {/* Leftmost: Menu button */}
+          {/* Mobile: Menu button */}
           <button
             onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="p-2 rounded-md text-gray-700 hover:text-black focus:outline-none"
+            className="lg:hidden p-2 rounded-md text-gray-700 hover:text-black focus:outline-none"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {showMobileMenu ? (
@@ -32,8 +32,8 @@ function Navbar() {
             </svg>
           </button>
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center ml-3">
+          {/* Logo - far left on desktop, after menu on mobile */}
+          <Link to="/" className="flex items-center ml-3 lg:ml-0">
             <img
               src="/final_logo_2.png"
               alt="AuraStore"
@@ -41,8 +41,57 @@ function Navbar() {
             />
           </Link>
 
-          {/* Middle: Spacing */}
-          <div className="flex-1"></div>
+          {/* Desktop: Navigation routes in center */}
+          <div className="hidden lg:flex items-center space-x-10 flex-1 justify-center">
+            <Link
+              to="/upper-wear"
+              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
+                location.pathname === '/upper-wear' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
+              }`}
+              style={location.pathname === '/upper-wear' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
+            >
+              UPPER WEAR
+            </Link>
+            <Link
+              to="/bottom-wear"
+              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
+                location.pathname === '/bottom-wear' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
+              }`}
+              style={location.pathname === '/bottom-wear' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
+            >
+              BOTTOM WEAR
+            </Link>
+            <Link
+              to="/sneakers"
+              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
+                location.pathname === '/sneakers' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
+              }`}
+              style={location.pathname === '/sneakers' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
+            >
+              SNEAKERS
+            </Link>
+            <Link
+              to="/sale"
+              className={`text-sm font-medium hover:text-red-700 transition uppercase tracking-wide relative ${
+                location.pathname === '/sale' ? 'text-red-700 transform translate-y-[-2px]' : 'text-red-600'
+              }`}
+              style={location.pathname === '/sale' ? {textShadow: '0 3px 6px rgba(220, 38, 38, 0.4)'} : {}}
+            >
+              SALE
+            </Link>
+            <Link
+              to="/all-products"
+              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
+                location.pathname === '/all-products' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
+              }`}
+              style={location.pathname === '/all-products' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
+            >
+              ALL PRODUCTS
+            </Link>
+          </div>
+
+          {/* Mobile: Spacing */}
+          <div className="flex-1 lg:hidden"></div>
 
           {/* Right: Account, Wishlist, Cart icons */}
           <div className="flex items-center space-x-2 sm:space-x-3">
@@ -133,58 +182,7 @@ function Navbar() {
             </Link>
           </div>
 
-          <div className="hidden lg:flex items-center space-x-10">
-            <Link
-              to="/upper-wear"
-              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
-                location.pathname === '/upper-wear' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
-              }`}
-              style={location.pathname === '/upper-wear' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
-            >
-              UPPER WEAR
 
-            </Link>
-            <Link
-              to="/bottom-wear"
-              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
-                location.pathname === '/bottom-wear' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
-              }`}
-              style={location.pathname === '/bottom-wear' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
-            >
-              BOTTOM WEAR
-
-            </Link>
-            <Link
-              to="/sneakers"
-              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
-                location.pathname === '/sneakers' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
-              }`}
-              style={location.pathname === '/sneakers' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
-            >
-              SNEAKERS
-
-            </Link>
-            <Link
-              to="/sale"
-              className={`text-sm font-medium hover:text-red-700 transition uppercase tracking-wide relative ${
-                location.pathname === '/sale' ? 'text-red-700 transform translate-y-[-2px]' : 'text-red-600'
-              }`}
-              style={location.pathname === '/sale' ? {textShadow: '0 3px 6px rgba(220, 38, 38, 0.4)'} : {}}
-            >
-              SALE
-
-            </Link>
-            <Link
-              to="/all-products"
-              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
-                location.pathname === '/all-products' ? 'text-black transform translate-y-[-2px]' : 'text-gray-800'
-              }`}
-              style={location.pathname === '/all-products' ? {textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)'} : {}}
-            >
-              ALL PRODUCTS
-
-            </Link>
-          </div>
 
 
         </div>

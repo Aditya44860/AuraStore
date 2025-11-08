@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const nodemailer = require("nodemailer");
 const { PrismaClient } = require('@prisma/client');
 require("dotenv").config();
 
@@ -15,27 +16,21 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 app.use(cors());
 app.use(express.json());
 
-// Database connection using Prisma
-
 // Register endpoint
 app.post("/api/auth/register", async (req, res) => {
-  console.log('Register endpoint hit');
   try {
     const { name, email, password } = req.body;
-    console.log('Registration data:', { name, email });
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
     if (existingUser) {
-      console.log('User already exists');
       return res.status(400).json({ message: "User already exists" });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('Password hashed');
 
     // Create user
     const user = await prisma.user.create({
@@ -46,13 +41,11 @@ app.post("/api/auth/register", async (req, res) => {
         fullName: name,
       },
     });
-    console.log('User created:', user.id);
 
     // Generate JWT token
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
       expiresIn: "24h",
     });
-    console.log('Token generated:', token);
 
     res.status(201).json({
       message: "User created successfully",
@@ -87,7 +80,7 @@ app.post("/api/auth/login", async (req, res) => {
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
       expiresIn: "24h",
     });
-    console.log('Login token generated:', token);
+
 
     res.json({
       message: "Login successful",
@@ -148,6 +141,56 @@ app.put("/api/auth/update-profile", verifyToken, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Email transporter setup
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// Subscribe endpoint
+app.post("/api/subscribe", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    // Send welcome email
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Welcome to AuraStore!',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h1 style="color: #333; text-align: center; margin-bottom: 30px;">Welcome to AuraStore!</h1>
+            <p style="color: #666; font-size: 16px; line-height: 1.6;">Thank you for subscribing to our newsletter!</p>
+            <p style="color: #666; font-size: 16px; line-height: 1.6;">You'll now receive:</p>
+            <ul style="color: #666; font-size: 16px; line-height: 1.6;">
+              <li>Early access to new collections</li>
+              <li>Exclusive offers and discounts</li>
+              <li>Fashion trends and style tips</li>
+            </ul>
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="https://theaurastore.vercel.app/" style="background-color: #000; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Shop Now</a>
+            </div>
+            <p style="color: #999; font-size: 14px; text-align: center; margin-top: 30px;">Welcome to the AuraStore family!</p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ message: "Subscription successful" });
+  } catch (error) {
+    res.status(500).json({ message: "Subscription failed", error: error.message });
   }
 });
 

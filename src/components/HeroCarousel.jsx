@@ -96,10 +96,10 @@ function HeroCarousel() {
             key={`${slide.id}-${i}`}
             className={`w-full h-full flex-shrink-0 ${slide.bg} flex items-center justify-center text-white`}
           >
-            <div className="text-center">
-              <h1 className="text-5xl font-bold mb-4">{slide.title}</h1>
-              <p className="text-xl mb-8">{slide.subtitle}</p>
-              <button className="relative px-8 py-3 font-semibold text-white bg-white/10 backdrop-blur-sm border border-white/30 hover:bg-white/20 hover:border-white/50 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300 group overflow-hidden">
+            <div className="text-center px-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">{slide.title}</h1>
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8">{slide.subtitle}</p>
+              <button className="relative px-4 sm:px-6 lg:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold text-white bg-white/10 backdrop-blur-sm border border-white/30 hover:bg-white/20 hover:border-white/50 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300 group overflow-hidden">
                 <span className="relative z-10">Shop Now</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
               </button>

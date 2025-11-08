@@ -37,9 +37,9 @@ function SearchBox() {
   }, [index, baseTexts.length]);
 
   return (
-    <div className="relative flex items-center bg-gray-100 rounded-full px-4 py-2 w-72 shadow-sm">
+    <div className="relative flex items-center bg-gray-100 rounded-full px-3 sm:px-4 py-2 w-full sm:w-64 lg:w-72 shadow-sm">
       <svg
-        className="w-4 h-4 text-gray-500 mr-2"
+        className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -63,7 +63,7 @@ function SearchBox() {
             {searchTexts.map((text, i) => (
               <div
                 key={i}
-                className="text-sm text-gray-500 h-5 flex items-center whitespace-nowrap"
+                className="text-xs sm:text-sm text-gray-500 h-5 flex items-center whitespace-nowrap"
               >
                 Try Searching {text}...
               </div>
@@ -74,7 +74,7 @@ function SearchBox() {
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="absolute top-0 left-0 w-full bg-transparent outline-none text-sm text-gray-700 placeholder-gray-500"
+          className="absolute top-0 left-0 w-full bg-transparent outline-none text-xs sm:text-sm text-gray-700 placeholder-gray-500"
           placeholder={isFocused || inputValue ? "Search products..." : ""}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}

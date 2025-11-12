@@ -95,6 +95,7 @@ function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
                   placeholder="Enter your email"
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -109,6 +110,7 @@ function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
                   placeholder="Enter your password"
+                  autoComplete="current-password"
                   required
                 />
               </div>

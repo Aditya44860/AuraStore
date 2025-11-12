@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem('token')
     if (token) {
       // Verify token with backend
-      fetch('http://localhost:3001/api/auth/me', {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

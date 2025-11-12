@@ -21,7 +21,7 @@ function Home() {
 
     // Send email in background
     try {
-      await fetch("http://localhost:3001/api/subscribe", {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/subscribe`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

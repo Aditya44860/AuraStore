@@ -10,7 +10,7 @@ function Profile() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      fetch('http://localhost:3001/api/auth/me', {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(res => res.json())
@@ -29,7 +29,7 @@ function Profile() {
     const token = localStorage.getItem('token');
     
     try {
-      const response = await fetch('http://localhost:3001/api/auth/update-profile', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/update-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

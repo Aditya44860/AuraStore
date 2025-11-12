@@ -21,16 +21,19 @@ function Home() {
 
     // Send email in background
     try {
-      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/subscribe`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: emailToSend }),
-      });
-    } catch (error) {
-      console.error("Email sending failed:", error);
-    }
+  console.log("Sending to:", `${import.meta.env.VITE_API_BASE_URL}/api/subscribe`);
+  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/subscribe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: emailToSend }),
+  });
+  console.log("Response status:", res.status);
+  const data = await res.text();
+  console.log("Response body:", data);
+} catch (error) {
+  console.error("Email sending failed:", error);
+}
+
   };
 
   const bestSellers = [
@@ -464,7 +467,7 @@ function Home() {
         </section>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes scale-in {
           0% {
             transform: scale(0) rotate(-180deg);

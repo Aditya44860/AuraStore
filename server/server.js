@@ -2,7 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
+const { Resend } = require('resend');
 const { PrismaClient } = require('@prisma/client');
 require("dotenv").config();
 
@@ -13,20 +13,8 @@ const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 // Middleware
-const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173'];
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
-
-// Security headers
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  next();
-});
 
 // Register endpoint
 app.post("/api/auth/register", async (req, res) => {
@@ -156,28 +144,23 @@ app.put("/api/auth/update-profile", verifyToken, async (req, res) => {
   }
 });
 
-// Email transporter setup
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+// Email setup with Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Subscribe endpoint
 app.post("/api/subscribe", async (req, res) => {
   try {
     const { email } = req.body;
+    console.log("Subscribe request received for:", email);
 
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    // Send welcome email
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
+    // Send welcome email with Resend
+    const { data, error } = await resend.emails.send({
+      from: 'AuraStore <onboarding@resend.dev>',
+      to: [email],
       subject: 'Welcome to AuraStore!',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
@@ -197,11 +180,17 @@ app.post("/api/subscribe", async (req, res) => {
           </div>
         </div>
       `
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
+    if (error) {
+      console.error('Resend error:', error);
+      return res.status(500).json({ message: "Email sending failed", error: error.message });
+    }
+
+    console.log('Email sent successfully:', data.id);
     res.json({ message: "Subscription successful" });
   } catch (error) {
+    console.error("Email sending error:", error);
     res.status(500).json({ message: "Subscription failed", error: error.message });
   }
 });

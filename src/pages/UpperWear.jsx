@@ -2,12 +2,12 @@ import ProductCard from '../components/ProductCard'
 
 function UpperWear() {
   const products = [
-    { id: 1, name: 'Oversized Hoodie', price: 89, category: 'Hoodies' },
-    { id: 2, name: 'Graphic T-Shirt', price: 39, category: 'T-Shirts' },
-    { id: 3, name: 'Bomber Jacket', price: 199, category: 'Jackets' },
-    { id: 4, name: 'Crew Neck Sweatshirt', price: 69, category: 'Sweatshirts' },
-    { id: 5, name: 'Vintage Tee', price: 45, category: 'T-Shirts' },
-    { id: 6, name: 'Zip Hoodie', price: 95, category: 'Hoodies' }
+    { id: 1, name: 'Oversized Hoodie', price: 2599, category: 'Hoodies' },
+    { id: 2, name: 'Graphic T-Shirt', price: 899, category: 'T-Shirts' },
+    { id: 3, name: 'Bomber Jacket', price: 3299, category: 'Jackets' },
+    { id: 4, name: 'Crew Neck Sweatshirt', price: 1899, category: 'Sweatshirts' },
+    { id: 5, name: 'Vintage Tee', price: 999, category: 'T-Shirts' },
+    { id: 6, name: 'Zip Hoodie', price: 2799, category: 'Hoodies' }
   ]
 
   return (
@@ -36,6 +36,7 @@ function UpperWear() {
             {products.map((product) => (
               <ProductCard
                 key={product.id}
+                id={product.id}
                 name={product.name}
                 price={product.price}
                 onAddToCart={() =>

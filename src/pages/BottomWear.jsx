@@ -2,12 +2,12 @@ import ProductCard from "../components/ProductCard";
 
 function LowerWear() {
   const products = [
-    { id: 1, name: "Slim Fit Jeans", price: 129, category: "Jeans" },
-    { id: 2, name: "Cargo Pants", price: 149, category: "Pants" },
-    { id: 3, name: "Joggers", price: 79, category: "Joggers" },
-    { id: 4, name: "Chino Shorts", price: 59, category: "Shorts" },
-    { id: 5, name: "Track Pants", price: 69, category: "Track Pants" },
-    { id: 6, name: "Denim Shorts", price: 65, category: "Shorts" },
+    { id: 1, name: "Slim Fit Jeans", price: 2199, category: "Jeans" },
+    { id: 2, name: "Cargo Pants", price: 1799, category: "Pants" },
+    { id: 3, name: "Joggers", price: 1299, category: "Joggers" },
+    { id: 4, name: "Chino Shorts", price: 999, category: "Shorts" },
+    { id: 5, name: "Track Pants", price: 1199, category: "Track Pants" },
+    { id: 6, name: "Denim Shorts", price: 1099, category: "Shorts" },
   ];
 
   return (
@@ -35,6 +35,7 @@ function LowerWear() {
             {products.map((product) => (
               <ProductCard
                 key={product.id}
+                id={product.id}
                 name={product.name}
                 price={product.price}
                 onAddToCart={() => console.log("Added to cart:", product.name)}

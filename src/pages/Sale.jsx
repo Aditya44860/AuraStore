@@ -5,44 +5,44 @@ function Sale() {
     {
       id: 1,
       name: "Vintage Hoodie",
-      price: 59,
-      originalPrice: 89,
+      price: 1699,
+      originalPrice: 2599,
       discount: "34% OFF",
     },
     {
       id: 2,
       name: "Classic Jeans",
-      price: 79,
-      originalPrice: 129,
+      price: 1399,
+      originalPrice: 2299,
       discount: "39% OFF",
     },
     {
       id: 3,
       name: "Summer Tee",
-      price: 25,
-      originalPrice: 39,
-      discount: "36% OFF",
+      price: 599,
+      originalPrice: 899,
+      discount: "33% OFF",
     },
     {
       id: 4,
       name: "Denim Jacket",
-      price: 99,
-      originalPrice: 159,
+      price: 1999,
+      originalPrice: 3199,
       discount: "38% OFF",
     },
     {
       id: 5,
       name: "Track Pants",
-      price: 45,
-      originalPrice: 69,
-      discount: "35% OFF",
+      price: 799,
+      originalPrice: 1199,
+      discount: "33% OFF",
     },
     {
       id: 6,
       name: "Casual Sneakers",
-      price: 69,
-      originalPrice: 119,
-      discount: "42% OFF",
+      price: 1799,
+      originalPrice: 2999,
+      discount: "40% OFF",
     },
   ];
 
@@ -76,8 +76,10 @@ function Sale() {
                   {product.discount}
                 </div>
                 <ProductCard
+                  id={product.id}
                   name={product.name}
                   price={product.price}
+                  originalPrice={product.originalPrice}
                   onAddToCart={() =>
                     console.log("Added to cart:", product.name)
                   }

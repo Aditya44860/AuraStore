@@ -2,15 +2,15 @@ import ProductCard from "../components/ProductCard";
 
 function AllProducts() {
   const products = [
-    { id: 1, name: "Oversized Hoodie", price: 8900, category: "Upper Wear" },
-    { id: 2, name: "Slim Fit Jeans", price: 12900, category: "Bottom Wear" },
-    { id: 3, name: "Air Max Sneakers", price: 1590, category: "Sneakers" },
-    { id: 4, name: "Graphic Tee", price: 3900, category: "Upper Wear" },
-    { id: 5, name: "Cargo Pants", price: 1490, category: "Bottom Wear" },
-    { id: 6, name: "Canvas Shoes", price: 8900, category: "Sneakers" },
-    { id: 7, name: "Bomber Jacket", price: 1990, category: "Upper Wear" },
-    { id: 8, name: "Joggers", price: 7900, category: "Bottom Wear" },
-    { id: 9, name: "High-Top Sneakers", price: 1190, category: "Sneakers" },
+    { id: 1, name: "Oversized Hoodie", price: 2799, category: "Upper Wear" },
+    { id: 2, name: "Slim Fit Jeans", price: 2199, category: "Bottom Wear" },
+    { id: 3, name: "Air Max Sneakers", price: 4999, category: "Sneakers" },
+    { id: 4, name: "Graphic Tee", price: 999, category: "Upper Wear" },
+    { id: 5, name: "Cargo Pants", price: 1799, category: "Bottom Wear" },
+    { id: 6, name: "Canvas Shoes", price: 2499, category: "Sneakers" },
+    { id: 7, name: "Bomber Jacket", price: 3299, category: "Upper Wear" },
+    { id: 8, name: "Joggers", price: 1499, category: "Bottom Wear" },
+    { id: 9, name: "High-Top Sneakers", price: 3799, category: "Sneakers" },
   ];
 
   return (
@@ -38,6 +38,7 @@ function AllProducts() {
             {products.map((product) => (
               <ProductCard
                 key={product.id}
+                id={product.id}
                 name={product.name}
                 price={product.price}
                 onAddToCart={() => console.log("Added to cart:", product.name)}

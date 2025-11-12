@@ -67,13 +67,13 @@ app.post("/api/auth/login", async (req, res) => {
       where: { email }
     });
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "Email not found !" });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "Wrong password !" });
     }
 
     // Generate JWT token

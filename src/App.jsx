@@ -11,6 +11,7 @@ import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import ProductPage from './pages/ProductPage'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 const router = createBrowserRouter([
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
   { path: '/sneakers', element: <><Navbar /><Sneakers /></> },
   { path: '/sale', element: <><Navbar /><Sale /></> },
   { path: '/all-products', element: <><Navbar /><AllProducts /></> },
+  { path: '/product/:id', element: <><Navbar /><ProductPage /></> },
   { path: '/wishlist', element: <><Navbar /><Wishlist /></> },
   { path: '/cart', element: <><Navbar /><Cart /></> },
   { path: '/checkout', element: <><Navbar /><Checkout /></> },

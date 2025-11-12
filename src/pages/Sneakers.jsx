@@ -2,12 +2,12 @@ import ProductCard from '../components/ProductCard'
 
 function Sneakers() {
   const products = [
-    { id: 1, name: 'Air Max Classic', price: 159, category: 'Running' },
-    { id: 2, name: 'Canvas High-Tops', price: 89, category: 'Casual' },
-    { id: 3, name: 'Basketball Shoes', price: 179, category: 'Sports' },
-    { id: 4, name: 'Slip-On Sneakers', price: 69, category: 'Casual' },
-    { id: 5, name: 'Running Shoes', price: 139, category: 'Running' },
-    { id: 6, name: 'Retro Sneakers', price: 119, category: 'Lifestyle' }
+    { id: 1, name: 'Air Max Classic', price: 5999, category: 'Running' },
+    { id: 2, name: 'Canvas High-Tops', price: 2499, category: 'Casual' },
+    { id: 3, name: 'Basketball Shoes', price: 6999, category: 'Sports' },
+    { id: 4, name: 'Slip-On Sneakers', price: 1999, category: 'Casual' },
+    { id: 5, name: 'Running Shoes', price: 4999, category: 'Running' },
+    { id: 6, name: 'Retro Sneakers', price: 3999, category: 'Lifestyle' }
   ]
 
   return (
@@ -33,6 +33,7 @@ function Sneakers() {
           {products.map(product => (
             <ProductCard
               key={product.id}
+              id={product.id}
               name={product.name}
               price={product.price}
               onAddToCart={() => console.log('Added to cart:', product.name)}

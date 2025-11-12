@@ -34,17 +34,17 @@ function Home() {
   };
 
   const bestSellers = [
-    { id: 1, name: "Bestseller Hoodie", price: 89 },
-    { id: 2, name: "Popular Jeans", price: 129 },
-    { id: 3, name: "Top T-Shirt", price: 39 },
-    { id: 4, name: "Trending Jacket", price: 199 },
+    { id: 1, name: "Bestseller Hoodie", price: 2499 },
+    { id: 2, name: "Popular Jeans", price: 1899 },
+    { id: 3, name: "Top T-Shirt", price: 799 },
+    { id: 4, name: "Trending Jacket", price: 3499 },
   ];
 
   const newArrivals = [
-    { id: 5, name: "New Hoodie", price: 95 },
-    { id: 6, name: "Fresh Jeans", price: 135 },
-    { id: 7, name: "Latest Tee", price: 45 },
-    { id: 8, name: "Modern Jacket", price: 210 },
+    { id: 5, name: "New Hoodie", price: 2699 },
+    { id: 6, name: "Fresh Jeans", price: 1999 },
+    { id: 7, name: "Latest Tee", price: 899 },
+    { id: 8, name: "Modern Jacket", price: 3799 },
   ];
 
   useEffect(() => {
@@ -201,6 +201,7 @@ function Home() {
                     viewport={{ once: true }}
                   >
                     <ProductCard
+                      id={product.id}
                       name={product.name}
                       price={product.price}
                       onAddToCart={() =>
@@ -245,6 +246,7 @@ function Home() {
                     viewport={{ once: true }}
                   >
                     <ProductCard
+                      id={product.id}
                       name={product.name}
                       price={product.price}
                       onAddToCart={() =>

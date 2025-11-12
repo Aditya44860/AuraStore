@@ -10,6 +10,7 @@ function ProductPage() {
   const [expandedSection, setExpandedSection] = useState(null);
   const [showFlicker, setShowFlicker] = useState(false);
   const [showReflection, setShowReflection] = useState(false);
+  const [showTransitionGlow, setShowTransitionGlow] = useState(false);
 
   // Mock product data - in real app this would come from API/context
   const product = {
@@ -40,7 +41,13 @@ function ProductPage() {
       setTimeout(() => {
         setShowReflection(false);
         setShowFlicker(true);
-        setTimeout(() => setShowFlicker(false), 1500);
+
+        // After flicker ends, fade smoothly into static glow
+        setTimeout(() => {
+          setShowFlicker(false);
+          setTimeout(() => setShowTransitionGlow(true), 10); // start fade bridge
+          setTimeout(() => setShowTransitionGlow(false), 400); // end fade bridge
+        }, 1500);
       }, 600);
     }
   };
@@ -159,16 +166,23 @@ function ProductPage() {
                     <div className="absolute inset-0 animate-reflection bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12"></div>
                   )}
                   <svg
-                    className={`w-5 h-5 transition-all duration-300 ${
+                    className={`w-5 h-5 transition-all duration-500 ${
                       showFlicker ? "animate-flicker" : ""
                     }`}
                     fill={isWishlisted ? "white" : "none"}
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                     style={{
-                      filter: showFlicker
-                        ? "drop-shadow(0 0 12px rgba(255,255,255,1)) brightness(1.5)"
-                        : "none",
+                      transition: "filter 0.5s ease, opacity 0.5s ease, transform 0.5s ease",
+                      opacity: isWishlisted ? 1 : 1,
+                      filter:
+                        showFlicker || showTransitionGlow
+                          ? // glowing flicker or bridge phase
+                            "drop-shadow(0 0 8px rgba(255,255,255,0.9)) drop-shadow(0 0 15px rgba(255,255,255,0.7)) drop-shadow(0 0 25px rgba(255,255,255,0.5))"
+                          : isWishlisted
+                          ? // steady state glow (identical perceived brightness)
+                            "drop-shadow(0 0 5px rgba(255,255,255,0.8)) drop-shadow(0 0 10px rgba(255,255,255,0.6)) drop-shadow(0 0 15px rgba(255,255,255,0.4))"
+                          : "none",
                     }}
                   >
                     <path
@@ -408,12 +422,17 @@ function ProductPage() {
                         <svg
                           key={star}
                           className={`w-5 h-5 ${
-                            star <= 4 ? "text-black animate-pulse-glow" : "text-gray-400"
+                            star <= 4
+                              ? "text-black animate-pulse-glow"
+                              : "text-gray-400"
                           }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                           style={{
-                            filter: star <= 4 ? "drop-shadow(0 0 6px rgba(107,114,128,0.9))" : "none"
+                            filter:
+                              star <= 4
+                                ? "drop-shadow(0 0 2px rgba(255,255,255,0.6))"
+                                : "none",
                           }}
                         >
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -425,84 +444,125 @@ function ProductPage() {
                     </span>
                   </div>
                   <button
-                    className="px-4 py-2 bg-black text-white text-sm font-medium rounded-md transition-all duration-300 transform hover:scale-105 active:scale-95 hover:bg-gray-800"
+                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md transition-all duration-300 transform hover:scale-105 active:scale-95 hover:bg-blue-700"
                     style={{
                       boxShadow:
-                        "0 4px 8px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2)",
+                        "0 4px 8px rgba(37, 99, 235, 0.3), 0 2px 4px rgba(37, 99, 235, 0.2)",
                     }}
                   >
                     Write a review
                   </button>
                 </div>
-                
+
                 {/* Review Summary */}
                 <div className="space-y-3 mt-4">
                   {[5, 4, 3, 2, 1].map((rating) => {
                     const counts = { 5: 120, 4: 45, 3: 20, 2: 8, 1: 3 };
                     const percentage = (counts[rating] / 196) * 100;
                     return (
-                      <div key={rating} className="flex items-center gap-4 text-sm">
-                        <span className="w-8 text-black font-medium">{rating} ★</span>
+                      <div
+                        key={rating}
+                        className="flex items-center gap-4 text-sm"
+                      >
+                        <span className="w-8 text-black font-medium">
+                          {rating} ★
+                        </span>
                         <div className="flex-1 bg-gray-300 rounded-full h-3">
                           <div
                             className="bg-black h-3 rounded-full transition-all duration-300"
                             style={{ width: `${percentage}%` }}
                           ></div>
                         </div>
-                        <span className="w-8 text-black font-medium text-right">{counts[rating]}</span>
+                        <span className="w-8 text-black font-medium text-right">
+                          {counts[rating]}
+                        </span>
                       </div>
                     );
                   })}
                 </div>
-                
+
                 {/* Written Reviews */}
                 <div className="mt-6 space-y-6">
                   <div className="border border-gray-300 rounded-lg p-4 bg-white shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="flex">
                         {[1, 2, 3, 4, 5].map((star) => (
-                          <svg key={star} className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                          <svg
+                            key={star}
+                            className="w-4 h-4 text-black"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                           </svg>
                         ))}
                       </div>
-                      <span className="text-sm font-bold text-black">Rahul K.</span>
+                      <span className="text-sm font-bold text-black">
+                        Rahul K.
+                      </span>
                       <span className="text-sm text-gray-600">2 days ago</span>
                     </div>
-                    <p className="text-sm text-gray-800 leading-relaxed">Amazing quality! The fabric is soft and the fit is perfect. Highly recommend this product.</p>
+                    <p className="text-sm text-gray-800 leading-relaxed">
+                      Amazing quality! The fabric is soft and the fit is
+                      perfect. Highly recommend this product.
+                    </p>
                   </div>
-                  
+
                   <div className="border border-gray-300 rounded-lg p-4 bg-white shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="flex">
                         {[1, 2, 3, 4].map((star) => (
-                          <svg key={star} className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                          <svg
+                            key={star}
+                            className="w-4 h-4 text-black"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                           </svg>
                         ))}
-                        <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <svg
+                          className="w-4 h-4 text-gray-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                       </div>
-                      <span className="text-sm font-bold text-black">Priya S.</span>
+                      <span className="text-sm font-bold text-black">
+                        Priya S.
+                      </span>
                       <span className="text-sm text-gray-600">1 week ago</span>
                     </div>
-                    <p className="text-sm text-gray-800 leading-relaxed">Good product overall. The size runs a bit large, so consider ordering one size smaller.</p>
+                    <p className="text-sm text-gray-800 leading-relaxed">
+                      Good product overall. The size runs a bit large, so
+                      consider ordering one size smaller.
+                    </p>
                   </div>
-                  
+
                   <div className="border border-gray-300 rounded-lg p-4 bg-white shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="flex">
                         {[1, 2, 3, 4, 5].map((star) => (
-                          <svg key={star} className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                          <svg
+                            key={star}
+                            className="w-4 h-4 text-black"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                           </svg>
                         ))}
                       </div>
-                      <span className="text-sm font-bold text-black">Arjun M.</span>
+                      <span className="text-sm font-bold text-black">
+                        Arjun M.
+                      </span>
                       <span className="text-sm text-gray-600">2 weeks ago</span>
                     </div>
-                    <p className="text-sm text-gray-800 leading-relaxed">Excellent purchase! Fast delivery and great customer service. Will definitely buy again.</p>
+                    <p className="text-sm text-gray-800 leading-relaxed">
+                      Excellent purchase! Fast delivery and great customer
+                      service. Will definitely buy again.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -511,7 +571,7 @@ function ProductPage() {
         </div>
       </div>
 
-      <style>{`
+      <style jsx>{`
         @keyframes flicker {
           0% {
             opacity: 1;
@@ -567,11 +627,12 @@ function ProductPage() {
         }
 
         @keyframes pulse-glow {
-          0%, 100% {
-            filter: drop-shadow(0 0 6px rgba(107,114,128,0.9));
+          0%,
+          100% {
+            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.6));
           }
           50% {
-            filter: drop-shadow(0 0 12px rgba(107,114,128,1));
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
           }
         }
 

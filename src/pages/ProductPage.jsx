@@ -444,10 +444,10 @@ function ProductPage() {
                     </span>
                   </div>
                   <button
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md transition-all duration-300 transform hover:scale-105 active:scale-95 hover:bg-blue-700"
+                    className="px-4 py-2 bg-black text-white text-sm font-medium rounded-md transition-all duration-300 transform hover:scale-105 active:scale-95 hover:bg-gray-800"
                     style={{
                       boxShadow:
-                        "0 4px 8px rgba(37, 99, 235, 0.3), 0 2px 4px rgba(37, 99, 235, 0.2)",
+                        "0 4px 8px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.1)",
                     }}
                   >
                     Write a review
@@ -455,7 +455,7 @@ function ProductPage() {
                 </div>
 
                 {/* Review Summary */}
-                <div className="space-y-3 mt-4">
+                <div className="space-y-3 mt-8">
                   {[5, 4, 3, 2, 1].map((rating) => {
                     const counts = { 5: 120, 4: 45, 3: 20, 2: 8, 1: 3 };
                     const percentage = (counts[rating] / 196) * 100;

@@ -34,7 +34,6 @@ function Home() {
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       );
       console.log('Welcome email sent successfully');
-      alert('Subscription successful! Please check your email (including promotions tab) for confirmation.');
     } catch (error) {
       console.error('Email sending failed:', error);
     }

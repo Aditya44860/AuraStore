@@ -2,7 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
-const { Resend } = require('resend');
+
 const { PrismaClient } = require('@prisma/client');
 require("dotenv").config();
 
@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware
 app.use(cors());
@@ -144,8 +144,7 @@ app.put("/api/auth/update-profile", verifyToken, async (req, res) => {
   }
 });
 
-// Email setup with Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 // Subscribe endpoint
 app.post("/api/subscribe", async (req, res) => {
@@ -157,40 +156,10 @@ app.post("/api/subscribe", async (req, res) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    // Send welcome email with Resend
-    const { data, error } = await resend.emails.send({
-      from: 'AuraStore <onboarding@resend.dev>',
-      to: [email],
-      subject: 'Welcome to AuraStore!',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h1 style="color: #333; text-align: center; margin-bottom: 30px;">Welcome to AuraStore!</h1>
-            <p style="color: #666; font-size: 16px; line-height: 1.6;">Thank you for subscribing to our newsletter!</p>
-            <p style="color: #666; font-size: 16px; line-height: 1.6;">You'll now receive:</p>
-            <ul style="color: #666; font-size: 16px; line-height: 1.6;">
-              <li>Early access to new collections</li>
-              <li>Exclusive offers and discounts</li>
-              <li>Fashion trends and style tips</li>
-            </ul>
-            <div style="text-align: center; margin-top: 30px;">
-              <a href="https://theaurastore.vercel.app/" style="background-color: #000; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Shop Now</a>
-            </div>
-            <p style="color: #999; font-size: 14px; text-align: center; margin-top: 30px;">Welcome to the AuraStore family!</p>
-          </div>
-        </div>
-      `
-    });
-
-    if (error) {
-      console.error('Resend error:', error);
-      return res.status(500).json({ message: "Email sending failed", error: error.message });
-    }
-
-    console.log('Email sent successfully:', data.id);
+    // Just return success - email will be sent from frontend
     res.json({ message: "Subscription successful" });
   } catch (error) {
-    console.error("Email sending error:", error);
+    console.error("Subscription error:", error);
     res.status(500).json({ message: "Subscription failed", error: error.message });
   }
 });

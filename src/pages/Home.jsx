@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import emailjs from '@emailjs/browser';
 import ProductCard from "../components/ProductCard";
 import HeroCarousel from "../components/HeroCarousel";
 import ScrollingBrands from "../components/ScrollingBrands";
@@ -19,20 +20,24 @@ function Home() {
     setEmail("");
     setTimeout(() => setShowTick(false), 2000);
 
-    // Send email in background
+    // Send email with EmailJS
     try {
-  console.log("Sending to:", `${import.meta.env.VITE_API_BASE_URL}/api/subscribe`);
-  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/subscribe`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: emailToSend }),
-  });
-  console.log("Response status:", res.status);
-  const data = await res.text();
-  console.log("Response body:", data);
-} catch (error) {
-  console.error("Email sending failed:", error);
-}
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        {
+          to_email: emailToSend,
+          to_name: 'Subscriber',
+          from_name: 'AuraStore',
+          reply_to: emailToSend
+        },
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
+      console.log('Welcome email sent successfully');
+      alert('Subscription successful! Please check your email (including promotions tab) for confirmation.');
+    } catch (error) {
+      console.error('Email sending failed:', error);
+    }
 
   };
 

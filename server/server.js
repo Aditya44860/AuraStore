@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const emailjs = require('@emailjs/nodejs');
 
 const { PrismaClient } = require('@prisma/client');
 require("dotenv").config();
@@ -156,7 +157,26 @@ app.post("/api/subscribe", async (req, res) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    // Just return success - email will be sent from frontend
+    // Send email with EmailJS
+    emailjs.send(
+      process.env.EMAILJS_SERVICE_ID,
+      process.env.EMAILJS_TEMPLATE_ID,
+      {
+        to_email: email,
+        to_name: 'Subscriber',
+        from_name: 'AuraStore',
+        reply_to: email
+      },
+      {
+        publicKey: process.env.EMAILJS_PUBLIC_KEY,
+        privateKey: process.env.EMAILJS_PRIVATE_KEY
+      }
+    ).then(() => {
+      console.log('Email sent successfully to:', email);
+    }).catch((err) => {
+      console.error('Email failed:', err);
+    });
+
     res.json({ message: "Subscription successful" });
   } catch (error) {
     console.error("Subscription error:", error);

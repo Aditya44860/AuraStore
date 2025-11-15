@@ -6,44 +6,40 @@ function HeroCarousel() {
       id: 1,
       title: "New Collection 2024",
       subtitle: "Discover the latest trends",
-      bg: "bg-gradient-to-br from-black to-gray-800",
     },
     {
       id: 2,
       title: "Summer Sale",
       subtitle: "Up to 50% off on selected items",
-      bg: "bg-gradient-to-br from-gray-900 to-black",
     },
     {
       id: 3,
       title: "Premium Quality",
       subtitle: "Crafted with finest materials",
-      bg: "bg-gradient-to-br from-black to-gray-700",
     },
     {
       id: 4,
       title: "Exclusive Drops",
       subtitle: "Limited edition streetwear collection",
-      bg: "bg-gradient-to-br from-gray-800 to-black",
     },
     {
       id: 5,
       title: "Free Shipping",
       subtitle: "On orders above $99 worldwide",
-      bg: "bg-gradient-to-br from-black to-gray-900",
     },
   ];
 
   const extendedSlides = [...slides, ...slides, ...slides];
   const [index, setIndex] = useState(slides.length);
   const [transition, setTransition] = useState(true);
+  const videoRefs = useRef({});
   const intervalRef = useRef(null);
 
   const resetInterval = () => {
     clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       setIndex((prev) => prev + 1);
-    }, 5000);
+    }, 8000);
   };
 
   const goToNext = () => {
@@ -59,7 +55,7 @@ function HeroCarousel() {
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setIndex((prev) => prev + 1);
-    }, 5000);
+    }, 8000);
     return () => clearInterval(intervalRef.current);
   }, []);
 
@@ -84,33 +80,52 @@ function HeroCarousel() {
   }, [index, slides.length]);
 
   return (
-    <div className="relative h-[70vh] overflow-hidden">
+    <div className="relative h-[91vh] overflow-hidden">
       <div
         className={`flex h-full ${
           transition ? "transition-transform duration-1000 ease-in-out" : ""
         }`}
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
-        {extendedSlides.map((slide, i) => (
-          <div
-            key={`${slide.id}-${i}`}
-            className={`w-full h-full flex-shrink-0 ${slide.bg} flex items-center justify-center text-white`}
-          >
-            <div className="text-center px-4">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">{slide.title}</h1>
-              <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8">{slide.subtitle}</p>
-              <button className="relative px-4 sm:px-6 lg:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold text-white bg-white/10 backdrop-blur-sm border border-white/30 hover:bg-white/20 hover:border-white/50 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300 group overflow-hidden">
-                <span className="relative z-10">Shop Now</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-              </button>
+        {extendedSlides.map((slide, i) => {
+          const currentSlide = ((index - slides.length) % slides.length + slides.length) % slides.length;
+          const isActive = i === index || Math.abs(i - index) <= 1;
+          
+          return (
+            <div
+              key={`${slide.id}-${i}`}
+              className="w-full h-full flex-shrink-0 relative flex items-center justify-center text-white"
+            >
+              {isActive && (
+                <video
+                  className="absolute inset-0 w-full h-full object-cover"
+                  autoPlay={i === index}
+                  muted
+                  loop
+                  playsInline
+                  preload={i === index ? "auto" : "none"}
+                  loading="lazy"
+                >
+                  <source src={`/hero_section/hero_vid${slide.id}.mp4`} type="video/mp4" />
+                </video>
+              )}
+              <div className="absolute inset-0 bg-black/30"></div>
+              <div className="text-center px-4 relative z-10">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">{slide.title}</h1>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8">{slide.subtitle}</p>
+                <button className="relative px-4 sm:px-6 lg:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold text-white bg-white/10 backdrop-blur-sm border border-white/30 hover:bg-white/20 hover:border-white/50 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300 group overflow-hidden">
+                  <span className="relative z-10">Shop Now</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <button
         onClick={goToPrev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 text-white p-2 transition"
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-white p-2 transition z-20"
       >
         <svg
           className="w-6 h-6"
@@ -129,7 +144,7 @@ function HeroCarousel() {
 
       <button
         onClick={goToNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 text-white p-2 transition"
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-white p-2 transition z-20"
       >
         <svg
           className="w-6 h-6"
@@ -146,7 +161,7 @@ function HeroCarousel() {
         </svg>
       </button>
 
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
         {slides.map((_, i) => (
           <button
             key={i}

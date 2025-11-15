@@ -14,20 +14,24 @@ import Signup from './pages/Signup'
 import ProductPage from './pages/ProductPage'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
+const PageWrapper = ({ children }) => (
+  <div className="pt-16 sm:pt-20">{children}</div>
+)
+
 const router = createBrowserRouter([
-  { path: '/', element: <><Navbar /><Home /></> },
-  { path: '/profile', element: <><Navbar /><Profile /></> },
-  { path: '/upper-wear', element: <><Navbar /><UpperWear /></> },
-  { path: '/bottom-wear', element: <><Navbar /><BottomWear /></> },
-  { path: '/sneakers', element: <><Navbar /><Sneakers /></> },
-  { path: '/sale', element: <><Navbar /><Sale /></> },
-  { path: '/all-products', element: <><Navbar /><AllProducts /></> },
-  { path: '/product/:id', element: <><Navbar /><ProductPage /></> },
-  { path: '/wishlist', element: <><Navbar /><Wishlist /></> },
-  { path: '/cart', element: <><Navbar /><Cart /></> },
-  { path: '/checkout', element: <><Navbar /><Checkout /></> },
-  { path: '/login', element: <Login /> },
-  { path: '/signup', element: <Signup /> },
+  { path: '/', element: <><Navbar /><PageWrapper><Home /></PageWrapper></> },
+  { path: '/profile', element: <><Navbar /><PageWrapper><Profile /></PageWrapper></> },
+  { path: '/upper-wear', element: <><Navbar /><PageWrapper><UpperWear /></PageWrapper></> },
+  { path: '/bottom-wear', element: <><Navbar /><PageWrapper><BottomWear /></PageWrapper></> },
+  { path: '/sneakers', element: <><Navbar /><PageWrapper><Sneakers /></PageWrapper></> },
+  { path: '/sale', element: <><Navbar /><PageWrapper><Sale /></PageWrapper></> },
+  { path: '/all-products', element: <><Navbar /><PageWrapper><AllProducts /></PageWrapper></> },
+  { path: '/product/:id', element: <><Navbar /><PageWrapper><ProductPage /></PageWrapper></> },
+  { path: '/wishlist', element: <><Navbar /><PageWrapper><Wishlist /></PageWrapper></> },
+  { path: '/cart', element: <><Navbar /><PageWrapper><Cart /></PageWrapper></> },
+  { path: '/checkout', element: <><Navbar /><PageWrapper><Checkout /></PageWrapper></> },
+  { path: '/login', element: <><Navbar /><PageWrapper><Login /></PageWrapper></> },
+  { path: '/signup', element: <><Navbar /><PageWrapper><Signup /></PageWrapper></> },
 ])
 
 const App = () => (

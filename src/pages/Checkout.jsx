@@ -1,11 +1,25 @@
+import { useNavigate } from 'react-router-dom'
+
 function Checkout() {
+  const navigate = useNavigate()
+
   return (
     <div style={{backgroundImage: 'url(/website_background.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed', minHeight: '100vh'}}>
       <div className="absolute inset-0 bg-white/50"></div>
       <div className="relative z-10">
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+        <div className="flex items-center mb-8">
+          <button 
+            onClick={() => navigate(-1)}
+            className="mr-4 p-2 hover:bg-gray-100 rounded-full transition"
+          >
+            <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+        </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Checkout Form */}

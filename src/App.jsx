@@ -29,9 +29,9 @@ const router = createBrowserRouter([
   { path: '/product/:id', element: <><Navbar /><PageWrapper><ProductPage /></PageWrapper></> },
   { path: '/wishlist', element: <><Navbar /><PageWrapper><Wishlist /></PageWrapper></> },
   { path: '/cart', element: <><Navbar /><PageWrapper><Cart /></PageWrapper></> },
-  { path: '/checkout', element: <><Navbar /><PageWrapper><Checkout /></PageWrapper></> },
-  { path: '/login', element: <><Navbar /><PageWrapper><Login /></PageWrapper></> },
-  { path: '/signup', element: <><Navbar /><PageWrapper><Signup /></PageWrapper></> },
+  { path: '/checkout', element: <Checkout /> },
+  { path: '/login', element: <Login /> },
+  { path: '/signup', element: <Signup /> },
 ])
 
 const App = () => (

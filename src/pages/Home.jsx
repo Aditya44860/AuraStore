@@ -307,8 +307,28 @@ function Home() {
         </section>
 
         {/* Brand Story / About */}
-        <section className="py-12 sm:py-16 bg-black text-white text-center">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <section className="py-12 sm:py-16 bg-black text-white text-center relative overflow-hidden">
+          <div className="absolute top-[10%] left-[15%] w-1 h-1 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[25%] left-[75%] w-0.5 h-0.5 bg-gray-300/40 rounded-full shadow-gray-300/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[40%] left-[25%] w-1.5 h-1.5 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[15%] left-[85%] w-1 h-1 bg-gray-400/35 rounded-full shadow-gray-400/65 shadow-md animate-pulse"></div>
+          <div className="absolute top-[60%] left-[10%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[35%] left-[90%] w-2 h-2 bg-gray-300/50 rounded-full shadow-gray-300/80 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[80%] left-[20%] w-1 h-1 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[70%] left-[80%] w-0.5 h-0.5 bg-gray-400/40 rounded-full shadow-gray-400/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[50%] left-[5%] w-1.5 h-1.5 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[90%] left-[65%] w-1 h-1 bg-gray-300/35 rounded-full shadow-gray-300/65 shadow-md animate-pulse"></div>
+          <div className="absolute top-[20%] left-[45%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[75%] left-[95%] w-2 h-2 bg-gray-400/45 rounded-full shadow-gray-400/75 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[45%] left-[55%] w-1 h-1 bg-gray-300/50 rounded-full shadow-gray-300/80 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[65%] left-[35%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[30%] left-[65%] w-1.5 h-1.5 bg-gray-400/45 rounded-full shadow-gray-400/75 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[85%] left-[45%] w-1 h-1 bg-white/35 rounded-full shadow-white/65 shadow-md animate-pulse"></div>
+          <div className="absolute top-[55%] left-[75%] w-0.5 h-0.5 bg-gray-300/40 rounded-full shadow-gray-300/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[95%] left-[25%] w-2 h-2 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[5%] left-[55%] w-1 h-1 bg-gray-400/40 rounded-full shadow-gray-400/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[12%] left-[35%] w-0.5 h-0.5 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 relative">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4 relative inline-block animated-heading">
               About AuraStore
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-white/40 via-white/60 to-white/40 opacity-60 underline-bar"></div>
@@ -327,9 +347,30 @@ function Home() {
 
         {/* Contact & Subscribe */}
         <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-t from-gray-900 to-black text-white relative overflow-hidden">
-          <div className="absolute top-5 sm:top-10 left-5 sm:left-10 w-2 h-2 bg-white/20 rounded-full animate-pulse"></div>
-          <div className="absolute bottom-10 sm:bottom-20 right-10 sm:right-20 w-1 h-1 bg-white/30 rounded-full animate-ping"></div>
-          <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-white/20 rounded-full animate-bounce"></div>
+          <div className="absolute top-[8%] left-[12%] w-1 h-1 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[22%] left-[78%] w-0.5 h-0.5 bg-gray-300/40 rounded-full shadow-gray-300/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[38%] left-[28%] w-1.5 h-1.5 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[18%] left-[88%] w-1 h-1 bg-gray-400/35 rounded-full shadow-gray-400/65 shadow-md animate-pulse"></div>
+          <div className="absolute top-[58%] left-[8%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[32%] left-[92%] w-2 h-2 bg-gray-300/50 rounded-full shadow-gray-300/80 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[78%] left-[18%] w-1 h-1 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[68%] left-[82%] w-0.5 h-0.5 bg-gray-400/40 rounded-full shadow-gray-400/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[48%] left-[2%] w-1.5 h-1.5 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[88%] left-[68%] w-1 h-1 bg-gray-300/35 rounded-full shadow-gray-300/65 shadow-md animate-pulse"></div>
+          <div className="absolute top-[28%] left-[48%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[72%] left-[98%] w-2 h-2 bg-gray-400/45 rounded-full shadow-gray-400/75 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[42%] left-[58%] w-1 h-1 bg-gray-300/50 rounded-full shadow-gray-300/80 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[62%] left-[38%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[12%] left-[62%] w-1.5 h-1.5 bg-gray-400/45 rounded-full shadow-gray-400/75 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[82%] left-[42%] w-1 h-1 bg-white/35 rounded-full shadow-white/65 shadow-md animate-pulse"></div>
+          <div className="absolute top-[52%] left-[72%] w-0.5 h-0.5 bg-gray-300/40 rounded-full shadow-gray-300/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[92%] left-[22%] w-2 h-2 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[2%] left-[52%] w-1 h-1 bg-gray-400/40 rounded-full shadow-gray-400/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[35%] left-[15%] w-0.5 h-0.5 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[65%] left-[85%] w-1 h-1 bg-gray-300/40 rounded-full shadow-gray-300/70 shadow-md animate-pulse"></div>
+          <div className="absolute top-[75%] left-[5%] w-1.5 h-1.5 bg-white/40 rounded-full shadow-white/70 shadow-lg animate-pulse"></div>
+          <div className="absolute top-[25%] left-[95%] w-0.5 h-0.5 bg-gray-400/35 rounded-full shadow-gray-400/65 shadow-md animate-pulse"></div>
+          <div className="absolute top-[85%] left-[75%] w-1 h-1 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
 
           <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
             <div className="text-center mb-8 sm:mb-12 lg:mb-16">

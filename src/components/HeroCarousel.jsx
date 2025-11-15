@@ -79,8 +79,15 @@ function HeroCarousel() {
     }
   }, [index, slides.length]);
 
+  useEffect(() => {
+    const currentSlideId = extendedSlides[index]?.id;
+    if (currentSlideId && videoRefs.current[currentSlideId]) {
+      videoRefs.current[currentSlideId].currentTime = 0;
+    }
+  }, [index, extendedSlides]);
+
   return (
-    <div className="relative h-[91vh] overflow-hidden">
+    <div className="relative h-[85vh] overflow-hidden">
       <div
         className={`flex h-full ${
           transition ? "transition-transform duration-1000 ease-in-out" : ""
@@ -98,13 +105,15 @@ function HeroCarousel() {
             >
               {isActive && (
                 <video
+                  ref={(el) => {
+                    if (el) videoRefs.current[slide.id] = el;
+                  }}
                   className="absolute inset-0 w-full h-full object-cover"
                   autoPlay={i === index}
                   muted
                   loop
                   playsInline
                   preload={i === index ? "auto" : "none"}
-                  loading="lazy"
                 >
                   <source src={`/hero_section/hero_vid${slide.id}.mp4`} type="video/mp4" />
                 </video>

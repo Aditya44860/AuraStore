@@ -9,13 +9,15 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
   const [isWishlisted, setIsWishlisted] = useState(() => isInWishlist(id))
   const [showSizeModal, setShowSizeModal] = useState(false)
 
-  const toggleWishlist = () => {
+  const toggleWishlist = async () => {
     if (isWishlisted) {
       removeFromWishlist(id)
       setIsWishlisted(false)
     } else {
-      addToWishlist({ id, name, price, originalPrice, imageUrl: image })
-      setIsWishlisted(true)
+      const success = await addToWishlist({ id, name, price, originalPrice, imageUrl: image })
+      if (success !== false) {
+        setIsWishlisted(true)
+      }
     }
   }
 

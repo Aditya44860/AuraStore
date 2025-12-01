@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { StarsBackground } from "../components/animate-ui/components/backgrounds/stars.jsx";
 
@@ -10,6 +10,10 @@ function Login() {
   const [error, setError] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Get the page user came from, default to home
+  const from = searchParams.get('from') || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +34,7 @@ function Login() {
       if (response.ok) {
         localStorage.setItem('token', data.token);
         login(data.user);
-        navigate('/profile');
+        navigate(from);
       } else {
         setError(data.message || 'Login failed');
       }

@@ -10,7 +10,7 @@ function UpperWear() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/products/category/Upper Wear')
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/category/Upper Wear`)
         const data = await response.json()
         
         if (data.success) {

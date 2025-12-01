@@ -10,7 +10,7 @@ function LowerWear() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/products/category/Bottom Wear');
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/category/Bottom Wear`);
         const data = await response.json();
         
         if (data.success) {

@@ -10,7 +10,7 @@ function Sale() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/products/sale');
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/sale`);
         const data = await response.json();
         
         if (data.success) {

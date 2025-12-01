@@ -55,12 +55,14 @@ function ProductPage() {
     }
   }, [id]);
 
-  const toggleWishlist = () => {
-    const newWishlistState = !isWishlisted;
-    setIsWishlisted(newWishlistState);
-
-    if (newWishlistState) {
-      addToWishlist(product);
+  const toggleWishlist = async () => {
+    if (isWishlisted) {
+      // Remove from wishlist
+      removeFromWishlist(product.id);
+      setIsWishlisted(false);
+    } else {
+      // Start animation immediately
+      setIsWishlisted(true);
       setShowReflection(true);
       setTimeout(() => {
         setShowReflection(false);
@@ -73,8 +75,15 @@ function ProductPage() {
           setTimeout(() => setShowTransitionGlow(false), 400); // end fade bridge
         }, 1500);
       }, 600);
-    } else {
-      removeFromWishlist(product.id);
+      
+      // Add to wishlist (revert if fails)
+      const success = await addToWishlist(product);
+      if (success === false) {
+        setIsWishlisted(false);
+        setShowReflection(false);
+        setShowFlicker(false);
+        setShowTransitionGlow(false);
+      }
     }
   };
 

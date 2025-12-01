@@ -10,7 +10,7 @@ function Sneakers() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/products/category/Sneaker')
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/category/Sneaker`)
         const data = await response.json()
         
         if (data.success) {

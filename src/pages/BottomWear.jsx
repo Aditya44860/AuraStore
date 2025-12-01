@@ -1,14 +1,33 @@
+import { useState, useEffect } from "react";
 import ProductCard from "../components/ProductCard";
+import ClothingLoader from "../components/ClothingLoader";
 
 function LowerWear() {
-  const products = [
-    { id: 1, name: "Slim Fit Jeans", price: 2199, category: "Jeans" },
-    { id: 2, name: "Cargo Pants", price: 1799, category: "Pants" },
-    { id: 3, name: "Joggers", price: 1299, category: "Joggers" },
-    { id: 4, name: "Chino Shorts", price: 999, category: "Shorts" },
-    { id: 5, name: "Track Pants", price: 1199, category: "Track Pants" },
-    { id: 6, name: "Denim Shorts", price: 1099, category: "Shorts" },
-  ];
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/products/category/Bottom Wear');
+        const data = await response.json();
+        
+        if (data.success) {
+          setProducts(data.products);
+        } else {
+          setError('Failed to fetch products');
+        }
+      } catch (err) {
+        setError('Error connecting to server');
+        console.error('Error fetching products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <div
@@ -31,17 +50,26 @@ function LowerWear() {
             <p className="text-gray-600 text-lg">Jeans, Pants, Shorts & More</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                price={product.price}
-                onAddToCart={() => console.log("Added to cart:", product.name)}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <ClothingLoader />
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-600">{error}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={parseFloat(product.price)}
+                  originalPrice={product.originalPrice ? parseFloat(product.originalPrice) : null}
+                  image={product.imageUrl}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

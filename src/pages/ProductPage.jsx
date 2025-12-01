@@ -1,9 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import ClothingLoader from "../components/ClothingLoader";
+import { useCart } from "../context/CartContext";
 
 function ProductPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -11,32 +14,53 @@ function ProductPage() {
   const [showFlicker, setShowFlicker] = useState(false);
   const [showReflection, setShowReflection] = useState(false);
   const [showTransitionGlow, setShowTransitionGlow] = useState(false);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock product data - in real app this would come from API/context
-  const product = {
-    id: id,
-    name: "Oversized T-Shirt",
-    price: 2499,
-    originalPrice: null,
-    description:
-      "Premium oversized t-shirt crafted with high-quality materials for ultimate comfort and style.",
-    sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["/product-placeholder.jpg"],
-    keyHighlights: {
-      gender: "Men",
-      category: "Topwear",
-      type: "Oversized Tshirt",
-      fit: "Oversized Fit",
-      closure: "No Closure",
-      length: "Regular",
-    },
-  };
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/api/products/${id}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          const productData = {
+            ...data.product,
+            sizes: ["S", "M", "L", "XL", "XXL"],
+            keyHighlights: {
+              gender: "Unisex",
+              category: data.product.category?.name || "Clothing",
+              type: data.product.name,
+              fit: "Regular Fit",
+              closure: "No Closure",
+              length: "Regular",
+            },
+          };
+          setProduct(productData);
+          setIsWishlisted(isInWishlist(data.product.id));
+        } else {
+          setError('Product not found');
+        }
+      } catch (err) {
+        setError('Error loading product');
+        console.error('Error fetching product:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchProduct();
+    }
+  }, [id]);
 
   const toggleWishlist = () => {
     const newWishlistState = !isWishlisted;
     setIsWishlisted(newWishlistState);
 
     if (newWishlistState) {
+      addToWishlist(product);
       setShowReflection(true);
       setTimeout(() => {
         setShowReflection(false);
@@ -49,12 +73,43 @@ function ProductPage() {
           setTimeout(() => setShowTransitionGlow(false), 400); // end fade bridge
         }, 1500);
       }, 600);
+    } else {
+      removeFromWishlist(product.id);
     }
+  };
+
+  const handleAddToCart = () => {
+    if (!selectedSize) {
+      alert('Please select a size');
+      return;
+    }
+    addToCart(product, selectedSize);
   };
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
+
+  if (loading) {
+    return <ClothingLoader />;
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -92,8 +147,16 @@ function ProductPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Product Images */}
             <div className="space-y-4">
-              <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-400 text-lg">Product Image</span>
+              <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                {product.imageUrl ? (
+                  <img 
+                    src={product.imageUrl} 
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-gray-400 text-lg">Product Image</span>
+                )}
               </div>
             </div>
 
@@ -105,11 +168,16 @@ function ProductPage() {
                 </h1>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl font-bold text-black">
-                    ₹{product.price}
+                    ₹{parseFloat(product.price)}
                   </span>
                   {product.originalPrice && (
                     <span className="text-lg text-gray-500 line-through">
-                      ₹{product.originalPrice}
+                      ₹{parseFloat(product.originalPrice)}
+                    </span>
+                  )}
+                  {product.isOnSale && (
+                    <span className="bg-red-500 text-white px-2 py-1 text-xs font-bold rounded">
+                      SALE
                     </span>
                   )}
                 </div>
@@ -195,6 +263,7 @@ function ProductPage() {
                   Wishlist
                 </button>
                 <button
+                  onClick={handleAddToCart}
                   className="flex-[2] bg-black text-white py-3 px-6 rounded-md font-medium hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 active:scale-95"
                   style={{
                     boxShadow:

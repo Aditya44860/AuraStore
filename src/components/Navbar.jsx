@@ -1,13 +1,18 @@
 import { Link, useLocation } from "react-router-dom";
 import SearchBox from "./SearchBox";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import { useState } from "react";
 
 function Navbar() {
   const { isLoggedIn, user, login, logout } = useAuth();
+  const { getCartCount, getWishlistCount } = useCart();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const location = useLocation();
+  
+  const cartCount = getCartCount();
+  const wishlistCount = getWishlistCount();
 
   const handleLogin = () => {
     login({ name: "John Doe", email: "john@example.com" });
@@ -16,48 +21,48 @@ function Navbar() {
 
   return (
     <nav className="bg-gradient-to-r from-gray-200 via-white to-gray-200 border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center h-16 sm:h-20">
-          {/* Mobile: Menu button */}
-          <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="lg:hidden p-2 rounded-md text-gray-700 hover:text-black focus:outline-none"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+      <div className="max-w-7xl mx-auto px-1 sm:px-2">
+        <div className="flex items-center h-16 sm:h-20 justify-between">
+          {/* Left: Mobile menu + Logo */}
+          <div className="flex items-center">
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="lg:hidden p-2 rounded-md text-gray-700 hover:text-black focus:outline-none mr-2"
             >
-              {showMobileMenu ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
-          </button>
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {showMobileMenu ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
+              </svg>
+            </button>
+            <Link to="/" className="flex items-center">
+              <img
+                src="/final_logo_2.png"
+                alt="AuraStore"
+                className="h-8 sm:h-11 w-auto"
+              />
+            </Link>
+          </div>
 
-          {/* Logo - far left on desktop, after menu on mobile */}
-          <Link to="/" className="flex items-center ml-3 lg:ml-0">
-            <img
-              src="/final_logo_2.png"
-              alt="AuraStore"
-              className="h-8 sm:h-11 w-auto"
-            />
-          </Link>
-
-          {/* Desktop: Navigation routes in center */}
-          <div className="hidden lg:flex items-center space-x-10 flex-1 justify-center">
+          {/* Center: Navigation routes - desktop only */}
+          <div className="hidden lg:flex items-center space-x-10">
             <Link
               to="/upper-wear"
               className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
@@ -135,11 +140,28 @@ function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile: Spacing */}
-          <div className="flex-1 lg:hidden"></div>
-
-          {/* Right: Account, Wishlist, Cart icons */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* Right: Search + Icons */}
+          <div className="flex items-center space-x-3">
+            {/* Search - full bar on desktop, icon on mobile */}
+            <div className="hidden lg:flex">
+              <SearchBox />
+            </div>
+            <button className="lg:hidden p-2 text-gray-700 hover:text-black transition">
+              <svg
+                className="w-5 h-5 sm:w-6 sm:h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </button>
+            <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Account Icon with dropdown */}
             <div className="relative">
               {isLoggedIn ? (
@@ -262,9 +284,11 @@ function Navbar() {
                   d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                 />
               </svg>
-              <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-[10px]">
-                2
-              </span>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-[10px]">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
 
             {/* Cart Icon */}
@@ -285,10 +309,13 @@ function Navbar() {
                   d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 7a2 2 0 01-2 2H8a2 2 0 01-2-2L5 9z"
                 />
               </svg>
-              <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-[10px]">
-                3
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-[10px]">
+                  {cartCount}
+                </span>
+              )}
             </Link>
+            </div>
           </div>
         </div>
 

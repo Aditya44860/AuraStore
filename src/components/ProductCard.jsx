@@ -1,13 +1,22 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useCart } from '../context/CartContext'
+import SizeModal from './SizeModal'
 
 function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
   const navigate = useNavigate()
-  const [isWishlisted, setIsWishlisted] = useState(false)
+  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart()
+  const [isWishlisted, setIsWishlisted] = useState(() => isInWishlist(id))
+  const [showSizeModal, setShowSizeModal] = useState(false)
 
   const toggleWishlist = () => {
-    setIsWishlisted(!isWishlisted)
-    console.log(isWishlisted ? 'Removed from wishlist:' : 'Added to wishlist:', name)
+    if (isWishlisted) {
+      removeFromWishlist(id)
+      setIsWishlisted(false)
+    } else {
+      addToWishlist({ id, name, price, originalPrice, imageUrl: image })
+      setIsWishlisted(true)
+    }
   }
 
   const handleProductClick = () => {
@@ -27,9 +36,23 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
       </button>
-      <div className="w-full bg-gray-100 flex items-center justify-center aspect-square sm:aspect-[4/5]">
-        <span className="text-gray-400 text-xs sm:text-sm">
-          {image || "Product Image"}
+      <div className="w-full bg-gray-100 flex items-center justify-center aspect-square sm:aspect-[4/5] overflow-hidden">
+        {image ? (
+          <img 
+            src={image} 
+            alt={name}
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+        ) : null}
+        <span 
+          className="text-gray-400 text-xs sm:text-sm flex items-center justify-center w-full h-full"
+          style={{ display: image ? 'none' : 'flex' }}
+        >
+          Product Image
         </span>
       </div>
       <div className="p-3 sm:p-4">
@@ -46,7 +69,11 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              onAddToCart()
+              if (onAddToCart) {
+                onAddToCart()
+              } else {
+                setShowSizeModal(true)
+              }
             }}
             className="bg-black text-white px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors duration-200 w-full"
           >
@@ -54,6 +81,13 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
           </button>
         </div>
       </div>
+      
+      <SizeModal
+        isOpen={showSizeModal}
+        onClose={() => setShowSizeModal(false)}
+        product={{ id, name, price, originalPrice, imageUrl: image }}
+        onAddToCart={(size) => addToCart({ id, name, price, originalPrice, imageUrl: image }, size)}
+      />
     </div>
   );
 }

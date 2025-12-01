@@ -31,7 +31,7 @@ function Signup() {
       if (response.ok) {
         localStorage.setItem("token", data.token);
         login(data.user);
-        navigate("/");
+        navigate("/profile");
       } else {
         setError(data.message || "Registration failed");
       }

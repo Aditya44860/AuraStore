@@ -1,50 +1,39 @@
+import { useState, useEffect } from "react";
 import ProductCard from "../components/ProductCard";
+import ClothingLoader from "../components/ClothingLoader";
 
 function Sale() {
-  const products = [
-    {
-      id: 1,
-      name: "Vintage Hoodie",
-      price: 1699,
-      originalPrice: 2599,
-      discount: "34% OFF",
-    },
-    {
-      id: 2,
-      name: "Classic Jeans",
-      price: 1399,
-      originalPrice: 2299,
-      discount: "39% OFF",
-    },
-    {
-      id: 3,
-      name: "Summer Tee",
-      price: 599,
-      originalPrice: 899,
-      discount: "33% OFF",
-    },
-    {
-      id: 4,
-      name: "Denim Jacket",
-      price: 1999,
-      originalPrice: 3199,
-      discount: "38% OFF",
-    },
-    {
-      id: 5,
-      name: "Track Pants",
-      price: 799,
-      originalPrice: 1199,
-      discount: "33% OFF",
-    },
-    {
-      id: 6,
-      name: "Casual Sneakers",
-      price: 1799,
-      originalPrice: 2999,
-      discount: "40% OFF",
-    },
-  ];
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/products/sale');
+        const data = await response.json();
+        
+        if (data.success) {
+          setProducts(data.products);
+        } else {
+          setError('Failed to fetch products');
+        }
+      } catch (err) {
+        setError('Error connecting to server');
+        console.error('Error fetching products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const calculateDiscount = (price, originalPrice) => {
+    if (!originalPrice) return null;
+    const discount = Math.round(((originalPrice - price) / originalPrice) * 100);
+    return `${discount}% OFF`;
+  };
 
   return (
     <div
@@ -69,24 +58,35 @@ function Sale() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product) => (
-              <div key={product.id} className="relative">
-                <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold z-10">
-                  {product.discount}
-                </div>
-                <ProductCard
-                  id={product.id}
-                  name={product.name}
-                  price={product.price}
-                  originalPrice={product.originalPrice}
-                  onAddToCart={() =>
-                    console.log("Added to cart:", product.name)
-                  }
-                />
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <ClothingLoader />
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-600">{error}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product) => {
+                const discount = calculateDiscount(parseFloat(product.price), parseFloat(product.originalPrice));
+                return (
+                  <div key={product.id} className="relative">
+                    {discount && (
+                      <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold z-10">
+                        {discount}
+                      </div>
+                    )}
+                    <ProductCard
+                      id={product.id}
+                      name={product.name}
+                      price={parseFloat(product.price)}
+                      originalPrice={parseFloat(product.originalPrice)}
+                      image={product.imageUrl}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

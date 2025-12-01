@@ -36,7 +36,6 @@ app.post("/api/auth/register", async (req, res) => {
     // Create user
     const user = await prisma.user.create({
       data: {
-        name,
         email,
         password: hashedPassword,
         fullName: name,
@@ -51,7 +50,7 @@ app.post("/api/auth/register", async (req, res) => {
     res.status(201).json({
       message: "User created successfully",
       token,
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: user.id, name: user.fullName, email: user.email },
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -86,7 +85,7 @@ app.post("/api/auth/login", async (req, res) => {
     res.json({
       message: "Login successful",
       token,
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: user.id, name: user.fullName, email: user.email },
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -120,7 +119,7 @@ app.get("/api/auth/me", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json({ user: { id: user.id, name: user.name, email: user.email, fullName: user.fullName, phone: user.phone, createdAt: user.createdAt } });
+    res.json({ user: { id: user.id, name: user.fullName, email: user.email, fullName: user.fullName, phone: user.phone, createdAt: user.createdAt } });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
@@ -138,7 +137,7 @@ app.put("/api/auth/update-profile", verifyToken, async (req, res) => {
 
     res.json({ 
       message: "Profile updated successfully",
-      user: { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, fullName: updatedUser.fullName, phone: updatedUser.phone }
+      user: { id: updatedUser.id, name: updatedUser.fullName, email: updatedUser.email, fullName: updatedUser.fullName, phone: updatedUser.phone }
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -181,6 +180,217 @@ app.post("/api/subscribe", async (req, res) => {
   } catch (error) {
     console.error("Subscription error:", error);
     res.status(500).json({ message: "Subscription failed", error: error.message });
+  }
+});
+
+// Get all products
+app.get("/api/products", async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      include: {
+        category: true
+      },
+      where: {
+        isActive: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    
+    res.json({
+      success: true,
+      products: products
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get products by category
+app.get("/api/products/category/:categoryName", async (req, res) => {
+  try {
+    const { categoryName } = req.params;
+    
+    const products = await prisma.product.findMany({
+      include: {
+        category: true
+      },
+      where: {
+        isActive: true,
+        category: {
+          name: {
+            equals: categoryName,
+            mode: 'insensitive'
+          }
+        }
+      }
+    });
+    
+    res.json({
+      success: true,
+      products: products
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get all categories
+app.get("/api/categories", async (req, res) => {
+  try {
+    const categories = await prisma.category.findMany({
+      include: {
+        _count: {
+          select: { products: true }
+        }
+      }
+    });
+    
+    res.json({
+      success: true,
+      categories: categories
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get sale products with optional category filter
+app.get("/api/products/sale", async (req, res) => {
+  try {
+    const { category } = req.query;
+    
+    const whereClause = {
+      isActive: true,
+      isOnSale: true
+    };
+    
+    if (category) {
+      whereClause.category = {
+        name: {
+          equals: category,
+          mode: 'insensitive'
+        }
+      };
+    }
+    
+    const products = await prisma.product.findMany({
+      include: {
+        category: true
+      },
+      where: whereClause,
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    
+    res.json({
+      success: true,
+      products: products
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get single product by ID
+app.get("/api/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        category: true
+      }
+    });
+    
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    
+    res.json({
+      success: true,
+      product: product
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get user's wishlist
+app.get("/api/wishlist", verifyToken, async (req, res) => {
+  try {
+    const favourites = await prisma.favouriteItems.findMany({
+      where: { userId: req.userId },
+      include: {
+        product: {
+          include: {
+            category: true
+          }
+        }
+      },
+      orderBy: {
+        addedAt: 'desc'
+      }
+    });
+    
+    res.json({
+      success: true,
+      items: favourites.map(fav => fav.product)
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Add item to wishlist
+app.post("/api/wishlist", verifyToken, async (req, res) => {
+  try {
+    const { productId } = req.body;
+    
+    const existingFav = await prisma.favouriteItems.findUnique({
+      where: {
+        userId_productId: {
+          userId: req.userId,
+          productId: productId
+        }
+      }
+    });
+    
+    if (existingFav) {
+      return res.json({ success: true, message: "Already in wishlist" });
+    }
+    
+    await prisma.favouriteItems.create({
+      data: {
+        userId: req.userId,
+        productId: productId
+      }
+    });
+    
+    res.json({ success: true, message: "Added to wishlist" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Remove item from wishlist
+app.delete("/api/wishlist/:productId", verifyToken, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    await prisma.favouriteItems.deleteMany({
+      where: {
+        userId: req.userId,
+        productId: productId
+      }
+    });
+    
+    res.json({ success: true, message: "Removed from wishlist" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
   }
 });
 

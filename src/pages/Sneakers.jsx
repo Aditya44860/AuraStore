@@ -1,14 +1,33 @@
+import { useState, useEffect } from 'react'
 import ProductCard from '../components/ProductCard'
+import ClothingLoader from '../components/ClothingLoader'
 
 function Sneakers() {
-  const products = [
-    { id: 1, name: 'Air Max Classic', price: 5999, category: 'Running' },
-    { id: 2, name: 'Canvas High-Tops', price: 2499, category: 'Casual' },
-    { id: 3, name: 'Basketball Shoes', price: 6999, category: 'Sports' },
-    { id: 4, name: 'Slip-On Sneakers', price: 1999, category: 'Casual' },
-    { id: 5, name: 'Running Shoes', price: 4999, category: 'Running' },
-    { id: 6, name: 'Retro Sneakers', price: 3999, category: 'Lifestyle' }
-  ]
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/products/category/Sneaker')
+        const data = await response.json()
+        
+        if (data.success) {
+          setProducts(data.products)
+        } else {
+          setError('Failed to fetch products')
+        }
+      } catch (err) {
+        setError('Error connecting to server')
+        console.error('Error fetching products:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [])
 
   return (
   <div
@@ -29,17 +48,26 @@ function Sneakers() {
           <p className="text-gray-600 text-lg">Step Up Your Game</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products.map(product => (
-            <ProductCard
-              key={product.id}
-              id={product.id}
-              name={product.name}
-              price={product.price}
-              onAddToCart={() => console.log('Added to cart:', product.name)}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <ClothingLoader />
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-600">{error}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map(product => (
+              <ProductCard
+                key={product.id}
+                id={product.id}
+                name={product.name}
+                price={parseFloat(product.price)}
+                originalPrice={product.originalPrice ? parseFloat(product.originalPrice) : null}
+                image={product.imageUrl}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   </div>

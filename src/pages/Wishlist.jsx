@@ -1,10 +1,11 @@
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 
 function Wishlist() {
-  const wishlistItems = [
-    { id: 1, name: "Vintage Hoodie", price: 89 },
-    { id: 2, name: "Designer Jeans", price: 149 },
-  ];
+  const { wishlistItems, removeFromWishlist, addToCart } = useCart();
+  const { isLoggedIn } = useAuth();
 
   return (
     <div
@@ -22,7 +23,19 @@ function Wishlist() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">My Wishlist</h1>
 
-          {wishlistItems.length === 0 ? (
+          {!isLoggedIn ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg mb-6">
+                Please login to enjoy the wishlist feature
+              </p>
+              <Link
+                to="/login"
+                className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition"
+              >
+                Login
+              </Link>
+            </div>
+          ) : wishlistItems.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg mb-4">
                 Your wishlist is empty
@@ -33,9 +46,12 @@ function Wishlist() {
               {wishlistItems.map((item) => (
                 <ProductCard
                   key={item.id}
+                  id={item.id}
                   name={item.name}
-                  price={item.price}
-                  onAddToCart={() => console.log("Added to cart:", item.name)}
+                  price={parseFloat(item.price)}
+                  originalPrice={item.originalPrice ? parseFloat(item.originalPrice) : null}
+                  image={item.imageUrl}
+                  onAddToCart={() => addToCart(item)}
                 />
               ))}
             </div>

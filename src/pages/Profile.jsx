@@ -4,8 +4,11 @@ function Profile() {
   const [user, setUser] = useState(null);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+  const [originalFullName, setOriginalFullName] = useState('');
+  const [originalPhone, setOriginalPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -17,14 +20,32 @@ function Profile() {
       .then(data => {
         if (data.user) {
           setUser(data.user);
-          setFullName(data.user.fullName || data.user.name);
-          setPhone(data.user.phone || '');
+          const name = data.user.fullName || data.user.name;
+          const phoneNum = data.user.phone || '';
+          setFullName(name);
+          setPhone(phoneNum);
+          setOriginalFullName(name);
+          setOriginalPhone(phoneNum);
         }
       });
     }
   }, []);
 
+  const validatePhone = (phoneNum) => {
+    const cleanPhone = phoneNum.replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      setPhoneError('Phone number must be exactly 10 digits');
+      return false;
+    }
+    setPhoneError('');
+    return true;
+  };
+
   const handleSave = async () => {
+    if (!validatePhone(phone)) {
+      return;
+    }
+    
     setLoading(true);
     const token = localStorage.getItem('token');
     
@@ -40,6 +61,8 @@ function Profile() {
       
       const data = await response.json();
       if (response.ok) {
+        setOriginalFullName(fullName);
+        setOriginalPhone(phone);
         setMessage('Profile updated successfully!');
         setTimeout(() => setMessage(''), 3000);
       } else {
@@ -77,9 +100,16 @@ function Profile() {
             </div>
           )}
           
+          {!phone && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">Welcome to AuraStore! 🎉</h3>
+              <p className="text-blue-700">Please complete your profile by adding your phone number to get started.</p>
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Complete Your Profile</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">{!phone ? 'Complete Your Profile' : 'Update Your Profile'}</h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
@@ -100,15 +130,24 @@ function Profile() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500" 
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number *</label>
+                <div className={!phone ? 'p-3 bg-yellow-50 border border-yellow-200 rounded-md' : ''}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mobile Number * {!phone && <span className="text-yellow-600">(Required)</span>}
+                  </label>
                   <input 
                     type="tel" 
                     value={phone} 
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Enter your mobile number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black" 
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setPhone(value);
+                      if (value.length > 0) validatePhone(value);
+                    }}
+                    placeholder="Enter your 10-digit mobile number"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                      !phone ? 'border-yellow-300 focus:ring-yellow-500' : phoneError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-black'
+                    }`}
                   />
+                  {phoneError && <p className="text-red-600 text-sm mt-1">{phoneError}</p>}
                 </div>
               </div>
             </div>
@@ -139,7 +178,7 @@ function Profile() {
           <div className="mt-8 pt-6 border-t border-gray-200">
             <button 
               onClick={handleSave}
-              disabled={loading || !fullName || !phone}
+              disabled={loading || !fullName || !phone || phoneError || (fullName === originalFullName && phone === originalPhone)}
               className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition mr-4 disabled:opacity-50"
             >
               {loading ? 'Saving...' : 'Save Changes'}

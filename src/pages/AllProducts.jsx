@@ -1,17 +1,33 @@
+import { useState, useEffect } from "react";
 import ProductCard from "../components/ProductCard";
+import ClothingLoader from "../components/ClothingLoader";
 
 function AllProducts() {
-  const products = [
-    { id: 1, name: "Oversized Hoodie", price: 2799, category: "Upper Wear" },
-    { id: 2, name: "Slim Fit Jeans", price: 2199, category: "Bottom Wear" },
-    { id: 3, name: "Air Max Sneakers", price: 4999, category: "Sneakers" },
-    { id: 4, name: "Graphic Tee", price: 999, category: "Upper Wear" },
-    { id: 5, name: "Cargo Pants", price: 1799, category: "Bottom Wear" },
-    { id: 6, name: "Canvas Shoes", price: 2499, category: "Sneakers" },
-    { id: 7, name: "Bomber Jacket", price: 3299, category: "Upper Wear" },
-    { id: 8, name: "Joggers", price: 1499, category: "Bottom Wear" },
-    { id: 9, name: "High-Top Sneakers", price: 3799, category: "Sneakers" },
-  ];
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/products');
+        const data = await response.json();
+        
+        if (data.success) {
+          setProducts(data.products);
+        } else {
+          setError('Failed to fetch products');
+        }
+      } catch (err) {
+        setError('Error connecting to server');
+        console.error('Error fetching products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <div
@@ -34,17 +50,26 @@ function AllProducts() {
             <p className="text-gray-600 text-sm sm:text-base lg:text-lg">Complete Collection</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 xl:gap-8">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                price={product.price}
-                onAddToCart={() => console.log("Added to cart:", product.name)}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <ClothingLoader />
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-600">{error}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 xl:gap-8">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={parseFloat(product.price)}
+                  originalPrice={product.originalPrice ? parseFloat(product.originalPrice) : null}
+                  image={product.imageUrl}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

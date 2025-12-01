@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 
 function Wishlist() {
-  const { wishlistItems, removeFromWishlist, addToCart } = useCart();
+  const { wishlistItems, removeFromWishlist } = useCart();
   const { isLoggedIn } = useAuth();
 
   return (
@@ -51,7 +51,6 @@ function Wishlist() {
                   price={parseFloat(item.price)}
                   originalPrice={item.originalPrice ? parseFloat(item.originalPrice) : null}
                   image={item.imageUrl}
-                  onAddToCart={() => addToCart(item)}
                 />
               ))}
             </div>

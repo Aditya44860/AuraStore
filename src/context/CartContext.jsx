@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import Toast from '../components/Toast';
 
 const CartContext = createContext();
 
@@ -13,26 +14,46 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const { isLoggedIn, user } = useAuth();
-  const [cartItems, setCartItems] = useState(() => {
-    const saved = localStorage.getItem('aurastore-cart');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [cartItems, setCartItems] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
-  // Save cart to localStorage
-  useEffect(() => {
-    localStorage.setItem('aurastore-cart', JSON.stringify(cartItems));
-  }, [cartItems]);
-
-  // Load wishlist from database when user logs in
+  // Load cart and wishlist from database when user logs in
   useEffect(() => {
     if (isLoggedIn && user?.email) {
+      fetchCart();
       fetchWishlist();
     } else {
+      setCartItems([]);
       setWishlistItems([]);
     }
   }, [isLoggedIn, user]);
+
+  const fetchCart = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/cart`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const formattedItems = data.items.map(item => ({
+          id: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          originalPrice: item.product.originalPrice,
+          imageUrl: item.product.imageUrl,
+          size: item.size,
+          quantity: item.quantity,
+          cartItemId: item.id
+        }));
+        setCartItems(formattedItems);
+      }
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    }
+  };
 
   const fetchWishlist = async () => {
     try {
@@ -51,36 +72,97 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = (product, size = 'M') => {
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id && item.size === size);
-      if (existingItem) {
-        return prev.map(item =>
-          item.id === product.id && item.size === size
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { ...product, size, quantity: 1 }];
-    });
-  };
-
-  const removeFromCart = (productId, size) => {
-    setCartItems(prev => prev.filter(item => !(item.id === productId && item.size === size)));
-  };
-
-  const updateQuantity = (productId, size, quantity) => {
-    if (quantity <= 0) {
-      removeFromCart(productId, size);
+  const addToCart = async (product, size = 'M') => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
       return;
     }
-    setCartItems(prev =>
-      prev.map(item =>
-        item.id === productId && item.size === size
-          ? { ...item, quantity }
+    
+    // Optimistically update UI
+    const existingItem = cartItems.find(item => item.id === product.id && item.size === size);
+    if (existingItem) {
+      setCartItems(prev => prev.map(item =>
+        item.id === product.id && item.size === size
+          ? { ...item, quantity: item.quantity + 1 }
           : item
-      )
-    );
+      ));
+    } else {
+      setCartItems(prev => [...prev, { ...product, size, quantity: 1, cartItemId: 'temp' }]);
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/cart`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ productId: product.id, size, quantity: 1 })
+      });
+      
+      if (response.ok) {
+        await fetchCart();
+      } else {
+        // Revert on failure
+        await fetchCart();
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      await fetchCart();
+    }
+  };
+
+  const removeFromCart = async (productId, size) => {
+    if (!isLoggedIn) return;
+    
+    const item = cartItems.find(i => i.id === productId && i.size === size);
+    if (!item) return;
+    
+    // Optimistically update UI
+    setCartItems(prev => prev.filter(i => !(i.id === productId && i.size === size)));
+    
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/cart/${item.cartItemId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      await fetchCart();
+    }
+  };
+
+  const updateQuantity = async (productId, size, quantity) => {
+    if (!isLoggedIn) return;
+    
+    const item = cartItems.find(i => i.id === productId && i.size === size);
+    if (!item) return;
+    
+    // Optimistically update UI
+    if (quantity <= 0) {
+      setCartItems(prev => prev.filter(i => !(i.id === productId && i.size === size)));
+    } else {
+      setCartItems(prev => prev.map(i =>
+        i.id === productId && i.size === size ? { ...i, quantity } : i
+      ));
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/cart/${item.cartItemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ quantity })
+      });
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      await fetchCart();
+    }
   };
 
   const addToWishlist = async (product) => {
@@ -185,11 +267,16 @@ export const CartProvider = ({ children }) => {
   return (
     <CartContext.Provider value={value}>
       {children}
+      <Toast 
+        message="Added to cart successfully!"
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
       {showLoginModal && (
         <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Login Required</h3>
-            <p className="text-gray-600 mb-6">Please login to add items to your wishlist</p>
+            <p className="text-gray-600 mb-6">Please login to add items to your cart and wishlist</p>
             <div className="flex gap-3">
               <button
                 onClick={closeLoginModal}

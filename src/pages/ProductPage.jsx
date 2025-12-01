@@ -14,6 +14,7 @@ function ProductPage() {
   const [showFlicker, setShowFlicker] = useState(false);
   const [showReflection, setShowReflection] = useState(false);
   const [showTransitionGlow, setShowTransitionGlow] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -92,7 +93,9 @@ function ProductPage() {
       alert('Please select a size');
       return;
     }
+    setIsPressed(true);
     addToCart(product, selectedSize);
+    setTimeout(() => setIsPressed(false), 1000);
   };
 
   const toggleSection = (section) => {
@@ -273,13 +276,19 @@ function ProductPage() {
                 </button>
                 <button
                   onClick={handleAddToCart}
-                  className="flex-[2] bg-black text-white py-3 px-6 rounded-md font-medium hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 active:scale-95"
+                  disabled={isPressed}
+                  className={`flex-[2] py-3 px-6 rounded-md font-medium transition-all duration-300 transform ${
+                    isPressed
+                      ? 'bg-white text-black border border-black scale-95 shadow-inner'
+                      : 'bg-black text-white hover:bg-gray-800 hover:scale-105 active:scale-95'
+                  }`}
                   style={{
-                    boxShadow:
-                      "0 4px 8px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.1)",
+                    boxShadow: isPressed
+                      ? "inset 0 2px 4px rgba(0,0,0,0.3)"
+                      : "0 4px 8px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.1)",
                   }}
                 >
-                  ADD TO CART
+                  {isPressed ? 'ADDED!' : 'ADD TO CART'}
                 </button>
               </div>
 

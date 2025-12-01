@@ -59,6 +59,7 @@ model User {
   reviews    Review[]
   favourites FavouriteItems[]
   payments   Payment[]
+  cart       Cart?
 
   @@map("users")
 }
@@ -78,6 +79,7 @@ model Product {
   isActive    Boolean     @default(true)
   isOnSale    Boolean     @default(false)
   imageUrl    String?
+  subcategory String?    // hoodies, tshirts, jackets, shorts, jeans, cargos
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -87,6 +89,7 @@ model Product {
   orderItems  OrderItem[]
   reviews     Review[]
   favourites  FavouriteItems[]
+  cartItems   CartItem[]
 }
 
 // CATEGORIES
@@ -171,6 +174,33 @@ model FavouriteItems {
 
   @@unique([userId, productId])
   @@map("favourite_items")
+}
+
+model Cart {
+  id         String     @id @default(uuid())
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  userId     Int        @unique
+  user       User       @relation(fields: [userId], references: [id])
+
+  items      CartItem[]
+}
+
+model CartItem {
+  id         String     @id @default(uuid())
+  quantity   Int        @default(1)
+  size       String     @default("M")
+  addedAt    DateTime   @default(now())
+
+  cartId     String
+  cart       Cart       @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  productId  String
+  product    Product    @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId, size])
+  @@map("cart_items")
 }
 
 model Review {

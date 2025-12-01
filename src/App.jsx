@@ -12,6 +12,7 @@ import Checkout from './pages/Checkout'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import ProductPage from './pages/ProductPage'
+import SearchResults from './pages/SearchResults'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 const PageWrapper = ({ children }) => (
@@ -26,6 +27,7 @@ const router = createBrowserRouter([
   { path: '/sneakers', element: <><Navbar /><PageWrapper><Sneakers /></PageWrapper></> },
   { path: '/sale', element: <><Navbar /><PageWrapper><Sale /></PageWrapper></> },
   { path: '/all-products', element: <><Navbar /><PageWrapper><AllProducts /></PageWrapper></> },
+  { path: '/search', element: <><Navbar /><PageWrapper><SearchResults /></PageWrapper></> },
   { path: '/product/:id', element: <><Navbar /><PageWrapper><ProductPage /></PageWrapper></> },
   { path: '/wishlist', element: <><Navbar /><PageWrapper><Wishlist /></PageWrapper></> },
   { path: '/cart', element: <><Navbar /><PageWrapper><Cart /></PageWrapper></> },

@@ -186,13 +186,18 @@ app.post("/api/subscribe", async (req, res) => {
 // Get all products
 app.get("/api/products", async (req, res) => {
   try {
+    const { subcategory } = req.query;
+    
+    const whereClause = { isActive: true };
+    if (subcategory) {
+      whereClause.subcategory = subcategory;
+    }
+    
     const products = await prisma.product.findMany({
       include: {
         category: true
       },
-      where: {
-        isActive: true
-      },
+      where: whereClause,
       orderBy: {
         createdAt: 'desc'
       }
@@ -211,20 +216,27 @@ app.get("/api/products", async (req, res) => {
 app.get("/api/products/category/:categoryName", async (req, res) => {
   try {
     const { categoryName } = req.params;
+    const { subcategory } = req.query;
+    
+    const whereClause = {
+      isActive: true,
+      category: {
+        name: {
+          equals: categoryName,
+          mode: 'insensitive'
+        }
+      }
+    };
+    
+    if (subcategory) {
+      whereClause.subcategory = subcategory;
+    }
     
     const products = await prisma.product.findMany({
       include: {
         category: true
       },
-      where: {
-        isActive: true,
-        category: {
-          name: {
-            equals: categoryName,
-            mode: 'insensitive'
-          }
-        }
-      }
+      where: whereClause
     });
     
     res.json({
@@ -259,7 +271,7 @@ app.get("/api/categories", async (req, res) => {
 // Get sale products with optional category filter
 app.get("/api/products/sale", async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category, subcategory } = req.query;
     
     const whereClause = {
       isActive: true,
@@ -273,6 +285,10 @@ app.get("/api/products/sale", async (req, res) => {
           mode: 'insensitive'
         }
       };
+    }
+    
+    if (subcategory) {
+      whereClause.subcategory = subcategory;
     }
     
     const products = await prisma.product.findMany({
@@ -389,6 +405,109 @@ app.delete("/api/wishlist/:productId", verifyToken, async (req, res) => {
     });
     
     res.json({ success: true, message: "Removed from wishlist" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get user's cart
+app.get("/api/cart", verifyToken, async (req, res) => {
+  try {
+    let cart = await prisma.cart.findUnique({
+      where: { userId: req.userId },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: { category: true }
+            }
+          }
+        }
+      }
+    });
+    
+    if (!cart) {
+      cart = await prisma.cart.create({
+        data: { userId: req.userId },
+        include: { items: { include: { product: { include: { category: true } } } } }
+      });
+    }
+    
+    res.json({ success: true, items: cart.items });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Add item to cart
+app.post("/api/cart", verifyToken, async (req, res) => {
+  try {
+    const { productId, size, quantity } = req.body;
+    
+    let cart = await prisma.cart.findUnique({ where: { userId: req.userId } });
+    if (!cart) {
+      cart = await prisma.cart.create({ data: { userId: req.userId } });
+    }
+    
+    const existingItem = await prisma.cartItem.findUnique({
+      where: {
+        cartId_productId_size: {
+          cartId: cart.id,
+          productId,
+          size: size || 'M'
+        }
+      }
+    });
+    
+    if (existingItem) {
+      await prisma.cartItem.update({
+        where: { id: existingItem.id },
+        data: { quantity: existingItem.quantity + (quantity || 1) }
+      });
+    } else {
+      await prisma.cartItem.create({
+        data: {
+          cartId: cart.id,
+          productId,
+          size: size || 'M',
+          quantity: quantity || 1
+        }
+      });
+    }
+    
+    res.json({ success: true, message: "Added to cart" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Update cart item quantity
+app.put("/api/cart/:itemId", verifyToken, async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const { quantity } = req.body;
+    
+    if (quantity <= 0) {
+      await prisma.cartItem.delete({ where: { id: itemId } });
+    } else {
+      await prisma.cartItem.update({
+        where: { id: itemId },
+        data: { quantity }
+      });
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Remove item from cart
+app.delete("/api/cart/:itemId", verifyToken, async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    await prisma.cartItem.delete({ where: { id: itemId } });
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

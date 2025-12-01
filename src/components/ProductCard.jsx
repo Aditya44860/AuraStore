@@ -8,6 +8,10 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart()
   const [isWishlisted, setIsWishlisted] = useState(() => isInWishlist(id))
   const [showSizeModal, setShowSizeModal] = useState(false)
+  const [isPressed, setIsPressed] = useState(false)
+  
+  const isOnSale = originalPrice && originalPrice > price
+  const discount = isOnSale ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
 
   const toggleWishlist = async () => {
     if (isWishlisted) {
@@ -27,6 +31,11 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
 
   return (
     <div className="bg-white border border-gray-200 overflow-hidden hover:border-black transition-all relative cursor-pointer" onClick={handleProductClick}>
+      {isOnSale && (
+        <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold z-10">
+          {discount}% OFF
+        </div>
+      )}
       <button
         onClick={(e) => {
           e.stopPropagation()
@@ -72,14 +81,20 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
             onClick={(e) => {
               e.stopPropagation()
               if (onAddToCart) {
+                setIsPressed(true)
                 onAddToCart()
+                setTimeout(() => setIsPressed(false), 1000)
               } else {
                 setShowSizeModal(true)
               }
             }}
-            className="bg-black text-white px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors duration-200 w-full"
+            className={`px-4 py-2 text-sm font-medium transition-all duration-200 w-full ${
+              isPressed 
+                ? 'bg-white text-black border border-black scale-95 shadow-inner' 
+                : 'bg-black text-white hover:bg-gray-800'
+            }`}
           >
-            Add to Cart
+            {isPressed ? 'Added!' : 'Add to Cart'}
           </button>
         </div>
       </div>
@@ -88,7 +103,12 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
         isOpen={showSizeModal}
         onClose={() => setShowSizeModal(false)}
         product={{ id, name, price, originalPrice, imageUrl: image }}
-        onAddToCart={(size) => addToCart({ id, name, price, originalPrice, imageUrl: image }, size)}
+        onAddToCart={(size) => {
+          setIsPressed(true)
+          addToCart({ id, name, price, originalPrice, imageUrl: image }, size)
+          setTimeout(() => setIsPressed(false), 1000)
+          setShowSizeModal(false)
+        }}
       />
     </div>
   );

@@ -2,15 +2,20 @@ import { useState } from 'react';
 
 function SizeModal({ isOpen, onClose, product, onAddToCart }) {
   const [selectedSize, setSelectedSize] = useState('');
+  const [isPressed, setIsPressed] = useState(false);
   const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
   const handleAddToCart = () => {
     if (!selectedSize) {
       return;
     }
+    setIsPressed(true);
     onAddToCart(selectedSize);
-    onClose();
-    setSelectedSize('');
+    setTimeout(() => {
+      setIsPressed(false);
+      onClose();
+      setSelectedSize('');
+    }, 1000);
   };
 
   if (!isOpen) return null;
@@ -65,14 +70,16 @@ function SizeModal({ isOpen, onClose, product, onAddToCart }) {
               e.stopPropagation();
               handleAddToCart();
             }}
-            disabled={!selectedSize}
-            className={`flex-1 py-2 px-4 rounded-md transition ${
-              selectedSize
+            disabled={!selectedSize || isPressed}
+            className={`flex-1 py-2 px-4 rounded-md transition-all duration-200 ${
+              isPressed
+                ? 'bg-white text-black border border-black scale-95 shadow-inner'
+                : selectedSize
                 ? 'bg-black text-white hover:bg-gray-800'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            Add to Cart
+            {isPressed ? 'Added!' : 'Add to Cart'}
           </button>
         </div>
       </div>

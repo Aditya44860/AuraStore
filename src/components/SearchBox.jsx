@@ -36,7 +36,7 @@ function SearchBox() {
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products`);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products?limit=1000`);
         const data = await response.json();
         if (data.success) {
           setAllProducts(data.products);

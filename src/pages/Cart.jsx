@@ -1,8 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 function Cart() {
-  const { cartItems, removeFromCart, updateQuantity, getCartTotal } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, getCartTotal, isLoadingCart, isItemPending } = useCart();
+  const { loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const total = getCartTotal();
 
@@ -23,7 +25,12 @@ function Cart() {
             Shopping Cart
           </h1>
 
-          {cartItems.length === 0 ? (
+          {(isLoadingCart || authLoading) ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+              <p className="text-gray-600 mt-4 text-lg">Bringing your stuff...</p>
+            </div>
+          ) : cartItems.length === 0 ? (
             <div className="text-center py-8 sm:py-12">
               <p className="text-gray-500 text-base sm:text-lg mb-4">Your cart is empty</p>
               <button
@@ -37,7 +44,7 @@ function Cart() {
             <div className="space-y-4 sm:space-y-6">
               {cartItems.map((item) => (
                 <div
-                  key={item.id}
+                  key={`${item.id}-${item.size}`}
                   className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white p-4 sm:p-6 rounded-lg shadow-md space-y-4 sm:space-y-0"
                 >
                   <div className="flex items-center space-x-3 sm:space-x-4">
@@ -84,7 +91,8 @@ function Cart() {
                     </div>
                     <button 
                       onClick={() => removeFromCart(item.id, item.size)}
-                      className="text-red-500 hover:text-red-700 text-sm sm:text-base"
+                      disabled={isItemPending(item.id, item.size)}
+                      className="text-red-500 hover:text-red-700 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Remove
                     </button>

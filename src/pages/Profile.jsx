@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 function Profile() {
+  const { updateUser } = useAuth();
   const [user, setUser] = useState(null);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -63,6 +65,7 @@ function Profile() {
       if (response.ok) {
         setOriginalFullName(fullName);
         setOriginalPhone(phone);
+        updateUser({ ...user, fullName, phone, name: fullName });
         setMessage('Profile updated successfully!');
         setTimeout(() => setMessage(''), 3000);
       } else {
@@ -84,8 +87,8 @@ function Profile() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="flex items-center space-x-6 mb-8">
-            <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center">
-              <span className="text-gray-600 text-2xl">👤</span>
+            <div className="w-24 h-24 bg-black rounded-full flex items-center justify-center">
+              <span className="text-white text-3xl font-bold">{(fullName || user.name)?.split(' ').map(n => n[0]).join('').toUpperCase()}</span>
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{fullName || user.name}</h1>

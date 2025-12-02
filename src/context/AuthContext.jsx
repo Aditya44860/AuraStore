@@ -20,17 +20,24 @@ export function AuthProvider({ children }) {
           'Authorization': `Bearer ${token}`
         }
       })
-      .then(response => response.json())
+      .then(response => {
+        if (response.status === 401) {
+          localStorage.removeItem('token')
+          return null
+        }
+        if (!response.ok) {
+          return null
+        }
+        return response.json()
+      })
       .then(data => {
-        if (data.user) {
+        if (data?.user) {
           setIsLoggedIn(true)
           setUser(data.user)
-        } else {
-          localStorage.removeItem('token')
         }
       })
-      .catch(() => {
-        localStorage.removeItem('token')
+      .catch((err) => {
+        console.error('Auth check failed:', err)
       })
       .finally(() => {
         setLoading(false)
@@ -51,11 +58,16 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('token')
   }
 
+  const updateUser = (userData) => {
+    setUser(userData)
+  }
+
   const value = {
     isLoggedIn,
     user,
     login,
     logout,
+    updateUser,
     loading
   }
 

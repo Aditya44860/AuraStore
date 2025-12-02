@@ -3,7 +3,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const emailjs = require('@emailjs/nodejs');
-
 const { PrismaClient } = require('@prisma/client');
 require("dotenv").config();
 
@@ -186,26 +185,38 @@ app.post("/api/subscribe", async (req, res) => {
 // Get all products
 app.get("/api/products", async (req, res) => {
   try {
-    const { subcategory } = req.query;
+    const { subcategory, page = 1, limit = 9 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const whereClause = { isActive: true };
     if (subcategory) {
       whereClause.subcategory = subcategory;
     }
     
-    const products = await prisma.product.findMany({
-      include: {
-        category: true
-      },
-      where: whereClause,
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+    const [products, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        include: {
+          category: true
+        },
+        where: whereClause,
+        orderBy: {
+          createdAt: 'desc'
+        },
+        skip,
+        take: parseInt(limit)
+      }),
+      prisma.product.count({ where: whereClause })
+    ]);
     
     res.json({
       success: true,
-      products: products
+      products: products,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        totalCount,
+        limit: parseInt(limit)
+      }
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -216,7 +227,8 @@ app.get("/api/products", async (req, res) => {
 app.get("/api/products/category/:categoryName", async (req, res) => {
   try {
     const { categoryName } = req.params;
-    const { subcategory } = req.query;
+    const { subcategory, page = 1, limit = 9 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const whereClause = {
       isActive: true,
@@ -232,16 +244,27 @@ app.get("/api/products/category/:categoryName", async (req, res) => {
       whereClause.subcategory = subcategory;
     }
     
-    const products = await prisma.product.findMany({
-      include: {
-        category: true
-      },
-      where: whereClause
-    });
+    const [products, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        include: {
+          category: true
+        },
+        where: whereClause,
+        skip,
+        take: parseInt(limit)
+      }),
+      prisma.product.count({ where: whereClause })
+    ]);
     
     res.json({
       success: true,
-      products: products
+      products: products,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        totalCount,
+        limit: parseInt(limit)
+      }
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -271,7 +294,8 @@ app.get("/api/categories", async (req, res) => {
 // Get sale products with optional category filter
 app.get("/api/products/sale", async (req, res) => {
   try {
-    const { category, subcategory } = req.query;
+    const { category, subcategory, page = 1, limit = 9 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const whereClause = {
       isActive: true,
@@ -291,19 +315,30 @@ app.get("/api/products/sale", async (req, res) => {
       whereClause.subcategory = subcategory;
     }
     
-    const products = await prisma.product.findMany({
-      include: {
-        category: true
-      },
-      where: whereClause,
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+    const [products, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        include: {
+          category: true
+        },
+        where: whereClause,
+        orderBy: {
+          createdAt: 'desc'
+        },
+        skip,
+        take: parseInt(limit)
+      }),
+      prisma.product.count({ where: whereClause })
+    ]);
     
     res.json({
       success: true,
-      products: products
+      products: products,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        totalCount,
+        limit: parseInt(limit)
+      }
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });

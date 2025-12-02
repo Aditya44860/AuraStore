@@ -13,26 +13,44 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, loading: authLoading } = useAuth();
   const [cartItems, setCartItems] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [isLoadingCart, setIsLoadingCart] = useState(true);
+  const [isLoadingWishlist, setIsLoadingWishlist] = useState(true);
+  const [pendingOperations, setPendingOperations] = useState(new Set());
+  const [isFetchingCart, setIsFetchingCart] = useState(false);
 
   // Load cart and wishlist from database when user logs in
   useEffect(() => {
-    if (isLoggedIn && user?.email) {
-      fetchCart();
-      fetchWishlist();
-    } else {
-      setCartItems([]);
-      setWishlistItems([]);
-    }
-  }, [isLoggedIn, user]);
+    if (authLoading) return;
+    
+    const initData = async () => {
+      if (isLoggedIn && user?.email) {
+        await Promise.all([fetchCart(), fetchWishlist()]);
+      } else {
+        setCartItems([]);
+        setWishlistItems([]);
+        setIsLoadingCart(false);
+        setIsLoadingWishlist(false);
+      }
+    };
+    initData();
+  }, [isLoggedIn, user, authLoading]);
 
-  const fetchCart = async () => {
+  const fetchCart = async (showLoading = true) => {
+    if (isFetchingCart) return;
+    setIsFetchingCart(true);
+    if (showLoading) setIsLoadingCart(true);
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoadingCart(false);
+        setIsFetchingCart(false);
+        return;
+      }
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/cart`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -52,12 +70,20 @@ export const CartProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error fetching cart:', error);
+    } finally {
+      if (showLoading) setIsLoadingCart(false);
+      setIsFetchingCart(false);
     }
   };
 
   const fetchWishlist = async () => {
+    setIsLoadingWishlist(true);
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoadingWishlist(false);
+        return;
+      }
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/wishlist`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -69,6 +95,8 @@ export const CartProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error fetching wishlist:', error);
+    } finally {
+      setIsLoadingWishlist(false);
     }
   };
 
@@ -119,18 +147,30 @@ export const CartProvider = ({ children }) => {
     const item = cartItems.find(i => i.id === productId && i.size === size);
     if (!item) return;
     
-    // Optimistically update UI
+    const opKey = `remove-${productId}-${size}`;
+    if (pendingOperations.has(opKey)) return;
+    
+    setPendingOperations(prev => new Set(prev).add(opKey));
     setCartItems(prev => prev.filter(i => !(i.id === productId && i.size === size)));
     
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/cart/${item.cartItemId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/cart/${item.cartItemId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (!response.ok) {
+        await fetchCart(false);
+      }
     } catch (error) {
       console.error('Error removing from cart:', error);
-      await fetchCart();
+      await fetchCart(false);
+    } finally {
+      setPendingOperations(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(opKey);
+        return newSet;
+      });
     }
   };
 
@@ -140,7 +180,11 @@ export const CartProvider = ({ children }) => {
     const item = cartItems.find(i => i.id === productId && i.size === size);
     if (!item) return;
     
-    // Optimistically update UI
+    const opKey = `update-${productId}-${size}`;
+    if (pendingOperations.has(opKey)) return;
+    
+    setPendingOperations(prev => new Set(prev).add(opKey));
+    
     if (quantity <= 0) {
       setCartItems(prev => prev.filter(i => !(i.id === productId && i.size === size)));
     } else {
@@ -151,7 +195,7 @@ export const CartProvider = ({ children }) => {
     
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/cart/${item.cartItemId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/cart/${item.cartItemId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -159,9 +203,18 @@ export const CartProvider = ({ children }) => {
         },
         body: JSON.stringify({ quantity })
       });
+      if (!response.ok) {
+        await fetchCart(false);
+      }
     } catch (error) {
       console.error('Error updating quantity:', error);
-      await fetchCart();
+      await fetchCart(false);
+    } finally {
+      setPendingOperations(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(opKey);
+        return newSet;
+      });
     }
   };
 
@@ -173,7 +226,7 @@ export const CartProvider = ({ children }) => {
     
     // Optimistically update UI first
     const exists = wishlistItems.find(item => item.id === product.id);
-    if (exists) return;
+    if (exists) return true;
     
     setWishlistItems(prev => [...prev, product]);
     
@@ -191,11 +244,14 @@ export const CartProvider = ({ children }) => {
       if (!response.ok) {
         // Revert on failure
         setWishlistItems(prev => prev.filter(item => item.id !== product.id));
+        return false;
       }
+      return true;
     } catch (error) {
       console.error('Error adding to wishlist:', error);
       // Revert on error
       setWishlistItems(prev => prev.filter(item => item.id !== product.id));
+      return false;
     }
   };
 
@@ -248,6 +304,11 @@ export const CartProvider = ({ children }) => {
     setShowLoginModal(false);
   };
 
+  const isItemPending = (productId, size) => {
+    return pendingOperations.has(`remove-${productId}-${size}`) || 
+           pendingOperations.has(`update-${productId}-${size}`);
+  };
+
   const value = {
     cartItems,
     wishlistItems,
@@ -262,6 +323,9 @@ export const CartProvider = ({ children }) => {
     getWishlistCount,
     showLoginModal,
     closeLoginModal,
+    isLoadingCart,
+    isLoadingWishlist,
+    isItemPending,
   };
 
   return (

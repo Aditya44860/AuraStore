@@ -56,7 +56,7 @@ function ProductPage() {
     }
   }, [id]);
 
-  const toggleWishlist = async () => {
+  const toggleWishlist = () => {
     if (isWishlisted) {
       // Remove from wishlist
       removeFromWishlist(product.id);
@@ -77,14 +77,15 @@ function ProductPage() {
         }, 1500);
       }, 600);
       
-      // Add to wishlist (revert if fails)
-      const success = await addToWishlist(product);
-      if (success === false) {
-        setIsWishlisted(false);
-        setShowReflection(false);
-        setShowFlicker(false);
-        setShowTransitionGlow(false);
-      }
+      // Add to wishlist in background (revert if fails)
+      addToWishlist(product).then(success => {
+        if (success === false) {
+          setIsWishlisted(false);
+          setShowReflection(false);
+          setShowFlicker(false);
+          setShowTransitionGlow(false);
+        }
+      });
     }
   };
 
@@ -231,7 +232,7 @@ function ProductPage() {
               <div className="flex gap-3">
                 <button
                   onClick={toggleWishlist}
-                  className={`flex-1 border py-3 px-6 rounded-md font-medium transition-all duration-300 flex items-center justify-center gap-2 transform relative overflow-hidden ${
+                  className={`flex-1 border py-3 px-6 rounded-md font-medium transition-transform duration-300 flex items-center justify-center gap-2 transform relative overflow-hidden ${
                     isWishlisted
                       ? "border-black bg-black text-white scale-95"
                       : "border-gray-300 text-gray-700 hover:border-gray-400 hover:scale-105 active:scale-95"

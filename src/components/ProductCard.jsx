@@ -13,15 +13,17 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
   const isOnSale = originalPrice && originalPrice > price
   const discount = isOnSale ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
 
-  const toggleWishlist = async () => {
+  const toggleWishlist = () => {
     if (isWishlisted) {
       removeFromWishlist(id)
       setIsWishlisted(false)
     } else {
-      const success = await addToWishlist({ id, name, price, originalPrice, imageUrl: image })
-      if (success !== false) {
-        setIsWishlisted(true)
-      }
+      setIsWishlisted(true)
+      addToWishlist({ id, name, price, originalPrice, imageUrl: image }).then(success => {
+        if (success === false) {
+          setIsWishlisted(false)
+        }
+      })
     }
   }
 

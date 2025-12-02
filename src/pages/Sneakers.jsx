@@ -7,11 +7,14 @@ function Sneakers() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [sortBy, setSortBy] = useState('latest')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const itemsPerPage = 9
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/category/Sneakers`)
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/category/Sneakers?page=${currentPage}&limit=${itemsPerPage}`)
         const data = await response.json()
         
         if (data.success) {
@@ -22,6 +25,7 @@ function Sneakers() {
             sorted.sort((a, b) => parseFloat(b.price) - parseFloat(a.price))
           }
           setProducts(sorted)
+          setTotalPages(data.pagination?.totalPages || 1)
         } else {
           setError('Failed to fetch products')
         }
@@ -34,7 +38,11 @@ function Sneakers() {
     }
 
     fetchProducts()
-  }, [sortBy])
+  }, [sortBy, currentPage])
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
   return (
   <div
@@ -71,14 +79,14 @@ function Sneakers() {
           </div>
         </div>
 
-        {loading ? (
+        {loading && products.length === 0 ? (
           <ClothingLoader />
         ) : error ? (
           <div className="text-center py-12">
             <p className="text-red-600">{error}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map(product => (
               <ProductCard
                 key={product.id}
@@ -89,6 +97,28 @@ function Sneakers() {
                 image={product.imageUrl}
               />
             ))}
+          </div>
+        )}
+        
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-8">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 rounded-md bg-white border border-gray-300 text-sm font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="px-4 py-2 text-sm font-medium">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 rounded-md bg-white border border-gray-300 text-sm font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
           </div>
         )}
       </div>

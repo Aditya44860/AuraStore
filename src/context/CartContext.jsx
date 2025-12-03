@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import Toast from '../components/Toast';
 
 const CartContext = createContext();
 
@@ -17,7 +16,6 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showToast, setShowToast] = useState(false);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
   const [isLoadingWishlist, setIsLoadingWishlist] = useState(true);
   const [pendingOperations, setPendingOperations] = useState(new Set());
@@ -331,11 +329,6 @@ export const CartProvider = ({ children }) => {
   return (
     <CartContext.Provider value={value}>
       {children}
-      <Toast 
-        message="Added to cart successfully!"
-        isVisible={showToast}
-        onClose={() => setShowToast(false)}
-      />
       {showLoginModal && (
         <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">

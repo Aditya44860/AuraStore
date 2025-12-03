@@ -13,19 +13,11 @@ function SearchResults() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products?limit=1000`);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/search?q=${encodeURIComponent(query)}&limit=100`);
         const data = await response.json();
         
         if (data.success) {
-          const filtered = data.products.filter(product => {
-            const searchTerm = query.toLowerCase();
-            return (
-              product.name.toLowerCase().includes(searchTerm) ||
-              product.category?.name.toLowerCase().includes(searchTerm) ||
-              product.subcategory?.toLowerCase().includes(searchTerm)
-            );
-          });
-          setProducts(filtered);
+          setProducts(data.products);
         }
       } catch (error) {
         console.error('Error fetching products:', error);

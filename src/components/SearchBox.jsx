@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-function SearchBox() {
+function SearchBox({ onSearchSubmit, autoFocus = false }) {
   const baseTexts = [
     "T-Shirts",
     "Hoodies",
@@ -17,9 +17,10 @@ function SearchBox() {
   const [inputValue, setInputValue] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
-  const [allProducts, setAllProducts] = useState([]);
+
   const containerRef = useRef(null);
   const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,19 +35,12 @@ function SearchBox() {
   }, []);
 
   useEffect(() => {
-    const fetchAllProducts = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products?limit=1000`);
-        const data = await response.json();
-        if (data.success) {
-          setAllProducts(data.products);
-        }
-      } catch (error) {
-        console.error('Failed to load products:', error);
-      }
-    };
-    fetchAllProducts();
-  }, []);
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [autoFocus]);
+
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -74,27 +68,38 @@ function SearchBox() {
       return;
     }
 
-    const searchTerm = inputValue.toLowerCase();
-    const filtered = allProducts.filter(product =>
-      product.name.toLowerCase().includes(searchTerm) ||
-      product.category?.name.toLowerCase().includes(searchTerm) ||
-      product.subcategory?.toLowerCase().includes(searchTerm)
-    ).slice(0, 5);
-    
-    setSearchResults(filtered);
-    setShowResults(true);
-  }, [inputValue, allProducts]);
+    const searchProducts = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/search?q=${encodeURIComponent(inputValue)}&limit=5`);
+        const data = await response.json();
+        if (data.success) {
+          setSearchResults(data.products);
+          setShowResults(true);
+        }
+      } catch (error) {
+        console.error('Search failed:', error);
+      }
+    };
+
+    const debounce = setTimeout(() => {
+      searchProducts();
+    }, 150);
+
+    return () => clearTimeout(debounce);
+  }, [inputValue]);
 
   const handleProductClick = (productId) => {
     navigate(`/product/${productId}`);
     setInputValue("");
     setShowResults(false);
+    if (onSearchSubmit) onSearchSubmit();
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && inputValue.trim()) {
       navigate(`/search?q=${encodeURIComponent(inputValue.trim())}`);
       setShowResults(false);
+      if (onSearchSubmit) onSearchSubmit();
     }
   };
 
@@ -134,6 +139,7 @@ function SearchBox() {
           </div>
         )}
         <input
+          ref={inputRef}
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}

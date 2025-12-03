@@ -2,22 +2,29 @@ import { Link, useLocation } from "react-router-dom";
 import SearchBox from "./SearchBox";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 function Navbar() {
-  const { isLoggedIn, user, login, logout } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const { getCartCount, getWishlistCount } = useCart();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const mobileSearchRef = useRef(null);
   const location = useLocation();
   
   const cartCount = getCartCount();
   const wishlistCount = getWishlistCount();
 
-  const handleLogin = () => {
-    login({ name: "John Doe", email: "john@example.com" });
-    setShowDropdown(false);
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mobileSearchRef.current && !mobileSearchRef.current.contains(event.target)) {
+        setShowMobileSearch(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <nav className="bg-gradient-to-r from-gray-200 via-white to-gray-200 border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
@@ -52,7 +59,7 @@ function Navbar() {
                 )}
               </svg>
             </button>
-            <Link to="/" className="flex items-center">
+            <Link to="/" className="flex items-center lg:mr-0">
               <img
                 src="/final_logo_2.png"
                 alt="AuraStore"
@@ -61,7 +68,7 @@ function Navbar() {
             </Link>
           </div>
 
-          {/* Center: Navigation routes - desktop only */}
+          {/* Center: Navigation on desktop */}
           <div className="hidden lg:flex items-center space-x-10">
             <Link
               to="/upper-wear"
@@ -142,11 +149,14 @@ function Navbar() {
 
           {/* Right: Search + Icons */}
           <div className="flex items-center space-x-3">
-            {/* Search - full bar on desktop, icon on mobile */}
+            {/* Search - desktop only */}
             <div className="hidden lg:flex">
               <SearchBox />
             </div>
-            <button className="lg:hidden p-2 text-gray-700 hover:text-black transition">
+            <button
+              onClick={() => setShowMobileSearch(true)}
+              className="lg:hidden p-2 text-gray-700 hover:text-black transition"
+            >
               <svg
                 className="w-5 h-5 sm:w-6 sm:h-6"
                 fill="none"
@@ -307,6 +317,19 @@ function Navbar() {
             </div>
           </div>
         </div>
+
+        {/* Mobile Search Overlay */}
+        {showMobileSearch && (
+          <>
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40"
+              onClick={() => setShowMobileSearch(false)}
+            ></div>
+            <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md z-50" ref={mobileSearchRef}>
+              <SearchBox onSearchSubmit={() => setShowMobileSearch(false)} autoFocus={true} />
+            </div>
+          </>
+        )}
 
         {/* Mobile menu overlay */}
         {showMobileMenu && (

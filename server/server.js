@@ -345,6 +345,41 @@ app.get("/api/products/sale", async (req, res) => {
   }
 });
 
+// Search products
+app.get("/api/products/search", async (req, res) => {
+  try {
+    const { q, limit = 5 } = req.query;
+    
+    if (!q || q.trim().length < 2) {
+      return res.json({ success: true, products: [] });
+    }
+    
+    const searchTerm = q.toLowerCase();
+    
+    const products = await prisma.product.findMany({
+      where: {
+        isActive: true,
+        OR: [
+          { name: { contains: searchTerm, mode: 'insensitive' } },
+          { subcategory: { contains: searchTerm, mode: 'insensitive' } },
+          { category: { name: { contains: searchTerm, mode: 'insensitive' } } }
+        ]
+      },
+      include: {
+        category: true
+      },
+      take: parseInt(limit),
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    
+    res.json({ success: true, products });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Get single product by ID
 app.get("/api/products/:id", async (req, res) => {
   try {

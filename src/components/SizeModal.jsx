@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 function SizeModal({ isOpen, onClose, product, onAddToCart }) {
   const [selectedSize, setSelectedSize] = useState('');
@@ -35,9 +36,9 @@ function SizeModal({ isOpen, onClose, product, onAddToCart }) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4" 
+      className="fixed inset-0 bg-black bg-opacity-70 z-[9999] flex items-center justify-center p-4" 
       onClick={(e) => {
         e.stopPropagation();
         onClose();
@@ -107,7 +108,8 @@ function SizeModal({ isOpen, onClose, product, onAddToCart }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

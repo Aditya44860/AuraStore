@@ -185,12 +185,19 @@ app.post("/api/subscribe", async (req, res) => {
 // Get all products
 app.get("/api/products", async (req, res) => {
   try {
-    const { subcategory, page = 1, limit = 9 } = req.query;
+    const { subcategory, page = 1, limit = 9, sortBy = 'latest' } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const whereClause = { isActive: true };
     if (subcategory) {
       whereClause.subcategory = subcategory;
+    }
+    
+    let orderBy = { createdAt: 'desc' };
+    if (sortBy === 'price-asc') {
+      orderBy = { price: 'asc' };
+    } else if (sortBy === 'price-desc') {
+      orderBy = { price: 'desc' };
     }
     
     const [products, totalCount] = await Promise.all([
@@ -199,9 +206,7 @@ app.get("/api/products", async (req, res) => {
           category: true
         },
         where: whereClause,
-        orderBy: {
-          createdAt: 'desc'
-        },
+        orderBy,
         skip,
         take: parseInt(limit)
       }),
@@ -227,7 +232,7 @@ app.get("/api/products", async (req, res) => {
 app.get("/api/products/category/:categoryName", async (req, res) => {
   try {
     const { categoryName } = req.params;
-    const { subcategory, page = 1, limit = 9 } = req.query;
+    const { subcategory, page = 1, limit = 9, sortBy = 'latest' } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const whereClause = {
@@ -244,12 +249,20 @@ app.get("/api/products/category/:categoryName", async (req, res) => {
       whereClause.subcategory = subcategory;
     }
     
+    let orderBy = { createdAt: 'desc' };
+    if (sortBy === 'price-asc') {
+      orderBy = { price: 'asc' };
+    } else if (sortBy === 'price-desc') {
+      orderBy = { price: 'desc' };
+    }
+    
     const [products, totalCount] = await Promise.all([
       prisma.product.findMany({
         include: {
           category: true
         },
         where: whereClause,
+        orderBy,
         skip,
         take: parseInt(limit)
       }),
@@ -294,7 +307,7 @@ app.get("/api/categories", async (req, res) => {
 // Get sale products with optional category filter
 app.get("/api/products/sale", async (req, res) => {
   try {
-    const { category, subcategory, page = 1, limit = 9 } = req.query;
+    const { category, subcategory, page = 1, limit = 9, sortBy = 'latest' } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const whereClause = {
@@ -315,15 +328,20 @@ app.get("/api/products/sale", async (req, res) => {
       whereClause.subcategory = subcategory;
     }
     
+    let orderBy = { createdAt: 'desc' };
+    if (sortBy === 'price-asc') {
+      orderBy = { price: 'asc' };
+    } else if (sortBy === 'price-desc') {
+      orderBy = { price: 'desc' };
+    }
+    
     const [products, totalCount] = await Promise.all([
       prisma.product.findMany({
         include: {
           category: true
         },
         where: whereClause,
-        orderBy: {
-          createdAt: 'desc'
-        },
+        orderBy,
         skip,
         take: parseInt(limit)
       }),

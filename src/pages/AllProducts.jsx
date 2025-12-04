@@ -29,21 +29,15 @@ function AllProducts() {
       try {
         const url =
           selectedFilter === "all"
-            ? `${import.meta.env.VITE_API_BASE_URL}/api/products?page=${currentPage}&limit=${itemsPerPage}`
+            ? `${import.meta.env.VITE_API_BASE_URL}/api/products?page=${currentPage}&limit=${itemsPerPage}&sortBy=${sortBy}`
             : `${
                 import.meta.env.VITE_API_BASE_URL
-              }/api/products?subcategory=${selectedFilter}&page=${currentPage}&limit=${itemsPerPage}`;
+              }/api/products?subcategory=${selectedFilter}&page=${currentPage}&limit=${itemsPerPage}&sortBy=${sortBy}`;
         const response = await fetch(url);
         const data = await response.json();
 
         if (data.success) {
-          let sorted = [...data.products];
-          if (sortBy === "price-asc") {
-            sorted.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-          } else if (sortBy === "price-desc") {
-            sorted.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-          }
-          setProducts(sorted);
+          setProducts(data.products);
           setTotalPages(data.pagination?.totalPages || 1);
         } else {
           setError("Failed to fetch products");

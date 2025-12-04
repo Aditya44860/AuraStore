@@ -25,7 +25,7 @@ function HeroCarousel() {
     {
       id: 5,
       title: "Free Shipping",
-      subtitle: "On orders above $99 worldwide",
+      subtitle: "On orders above ₨999 worldwide",
     },
   ];
 

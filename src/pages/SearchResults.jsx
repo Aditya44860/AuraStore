@@ -12,15 +12,17 @@ function SearchResults() {
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
+      setProducts([]);
       try {
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/search?q=${encodeURIComponent(query)}&limit=100`);
         const data = await response.json();
         
         if (data.success) {
-          setProducts(data.products);
+          setProducts(data.products || []);
         }
       } catch (error) {
         console.error('Error fetching products:', error);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -29,6 +31,7 @@ function SearchResults() {
     if (query) {
       fetchProducts();
     } else {
+      setProducts([]);
       setLoading(false);
     }
   }, [query]);

@@ -1,557 +1,657 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-
+import { useEffect, useState, useRef } from "react";
+import { motion, useScroll, useTransform, useMotionValueEvent, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
-import HeroCarousel from "../components/HeroCarousel";
 import ScrollingBrands from "../components/ScrollingBrands";
-import ScrollingText from "../components/ScrollingText";
+import Shoe3DScene from "../components/Shoe3D";
 
+/* ── Scroll-reveal word component ── */
+function RevealWord({ children, progress, range }) {
+  const opacity = useTransform(progress, range, [0.08, 1]);
+  const y = useTransform(progress, range, [8, 0]);
+  return (
+    <motion.span style={{ opacity, y }} className="inline-block mr-[0.3em] will-change-transform">
+      {children}
+    </motion.span>
+  );
+}
+
+function ScrollRevealText({ text, className }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.98", "start 0.5"],
+  });
+  const words = text.split(" ");
+  return (
+    <p ref={ref} className={className}>
+      {words.map((word, i) => {
+        const start = i / words.length;
+        const end = start + 1 / words.length;
+        return (
+          <RevealWord key={i} progress={scrollYProgress} range={[start, end]}>
+            {word}
+          </RevealWord>
+        );
+      })}
+    </p>
+  );
+}
+
+/* ── Horizontal Product Banner ── */
+function HorizontalProductBanner({ products, loading }) {
+  const scrollRef = useRef(null);
+
+  if (loading) {
+    return (
+      <div className="flex gap-5 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="w-[260px] sm:w-[280px] flex-shrink-0 animate-pulse">
+            <div className="aspect-[3/4] bg-gray-100 rounded-xl mb-3" />
+            <div className="h-3 bg-gray-100 rounded w-3/4 mb-2" />
+            <div className="h-3 bg-gray-100 rounded w-1/3" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={scrollRef}
+      className="flex gap-5 px-4 sm:px-6 lg:px-8 overflow-x-auto overflow-y-hidden hide-scrollbar snap-x snap-proximity scroll-smooth"
+      style={{ overscrollBehaviorX: "contain", WebkitOverflowScrolling: "touch" }}
+    >
+      {products.map((product) => (
+        <div
+          key={product.id}
+          className="w-[260px] sm:w-[280px] flex-shrink-0 snap-start"
+        >
+          <ProductCard
+            id={product.id}
+            name={product.name}
+            price={parseFloat(product.price)}
+            originalPrice={product.originalPrice ? parseFloat(product.originalPrice) : null}
+            image={product.imageUrl}
+            gallery={product.gallery}
+            category={product.category?.name}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════
+   HOME PAGE
+   ════════════════════════════════════════════ */
 function Home() {
   const [email, setEmail] = useState("");
   const [showTick, setShowTick] = useState(false);
+  const [newArrivals, setNewArrivals] = useState([]);
+  const [bestSellers, setBestSellers] = useState([]);
+  const [loadingNew, setLoadingNew] = useState(true);
+  const [loadingBest, setLoadingBest] = useState(true);
+
+  const containerRef = useRef(null);
+  const heroRef = useRef(null);
+  const philosophyRef = useRef(null);
+  const videoRef = useRef(null);
+  const beliefRef = useRef(null);
+
+  // Hero parallax
+  const { scrollYProgress: heroScroll } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroScale = useTransform(heroScroll, [0, 1], [1, 1.15]);
+  const heroOpacity = useTransform(heroScroll, [0, 0.7], [1, 0]);
+  const heroY = useTransform(heroScroll, [0, 1], ["0%", "25%"]);
+
+  // Philosophy parallax
+  const { scrollYProgress: philScroll } = useScroll({
+    target: philosophyRef,
+    offset: ["start end", "end start"],
+  });
+  const philImageY = useTransform(philScroll, [0, 1], ["8%", "-8%"]);
+
+  // Video section parallax
+  const { scrollYProgress: videoScroll } = useScroll({
+    target: videoRef,
+    offset: ["start end", "end start"],
+  });
+  const videoY = useTransform(videoScroll, [0, 1], ["-10%", "10%"]);
+
+  // Belief section — 3D shoe rotation
+  const { scrollYProgress: beliefScroll } = useScroll({
+    target: beliefRef,
+    offset: ["start end", "end start"],
+  });
+  const scrollProgressRef = useRef(0);
+  useMotionValueEvent(beliefScroll, "change", (v) => {
+    scrollProgressRef.current = v;
+  });
+
+  // Fetch products
+  useEffect(() => {
+    const API = import.meta.env.VITE_API_BASE_URL;
+
+    // Shuffle helper
+    const shuffle = (arr) => {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    };
+
+    // Fetch from multiple categories for diverse mix
+    const fetchDiverse = async (setter, setLoading, sortBy = 'latest') => {
+      try {
+        const [upper, bottom, sneakers] = await Promise.all([
+          fetch(`${API}/api/products/category/Upper Wear?page=1&limit=5&sortBy=${sortBy}`).then(r => r.json()),
+          fetch(`${API}/api/products/category/Bottom Wear?page=1&limit=5&sortBy=${sortBy}`).then(r => r.json()),
+          fetch(`${API}/api/products/category/Sneakers?page=1&limit=4&sortBy=${sortBy}`).then(r => r.json()),
+        ]);
+        const all = [
+          ...(upper.success ? upper.products : []),
+          ...(bottom.success ? bottom.products : []),
+          ...(sneakers.success ? sneakers.products : []),
+        ];
+        setter(shuffle(all));
+      } catch (err) {
+        console.error('Error fetching diverse products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDiverse(setNewArrivals, setLoadingNew, 'latest');
+    fetchDiverse(setBestSellers, setLoadingBest, 'price-desc');
+  }, []);
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
     if (!email) return;
-
-    // Show tick and clear input immediately
     setShowTick(true);
     const emailToSend = email;
     setEmail("");
     setTimeout(() => setShowTick(false), 2000);
-
-    // Send to server
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/subscribe`, {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/subscribe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailToSend }),
       });
-      
-      if (res.ok) {
-        console.log('Subscription successful');
-      }
     } catch (error) {
-      console.error('Subscription failed:', error);
+      console.error("Subscription failed:", error);
     }
-
   };
 
-  const bestSellers = [
-    { id: 1, name: "Bestseller Hoodie", price: 2499 },
-    { id: 2, name: "Popular Jeans", price: 1899 },
-    { id: 3, name: "Top T-Shirt", price: 799 },
-    { id: 4, name: "Trending Jacket", price: 3499 },
-  ];
-
-  const newArrivals = [
-    { id: 5, name: "New Hoodie", price: 2699 },
-    { id: 6, name: "Fresh Jeans", price: 1999 },
-    { id: 7, name: "Latest Tee", price: 899 },
-    { id: 8, name: "Modern Jacket", price: 3799 },
-  ];
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const underline = entry.target.querySelector(".underline-bar");
-          if (underline) {
-            if (entry.isIntersecting) {
-              underline.classList.add("expand");
-              underline.classList.remove("retract");
-            } else {
-              underline.classList.add("retract");
-              underline.classList.remove("expand");
-            }
-          }
-        });
-      },
-      {
-        threshold: 0.5,
-        rootMargin: "-20% 0px -20% 0px",
-      }
-    );
-
-    const headings = document.querySelectorAll(".animated-heading");
-    headings.forEach((heading) => {
-      observer.observe(heading);
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  const fadeUp = {
+    hidden: { opacity: 0, y: 35 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] },
+    },
+  };
 
   return (
-    <div
-      style={{
-        backgroundImage: "url(/website_background.png)",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-      }}
-    >
-      <div className="absolute inset-0 bg-white/50"></div>
-      <div className="relative z-10">
-        {/* Hero Carousel */}
-        <HeroCarousel />
+    <div ref={containerRef} className="bg-[#fafafa] min-h-screen selection:bg-gray-900 selection:text-white">
 
-        <ScrollingText />
-
-        {/* Featured Collections */}
-        <motion.section
-          className="py-12 bg-gray-50"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-        >
-          <div className="max-w-6xl mx-auto px-4 text-center">
-            <motion.h2
-              className="text-2xl sm:text-3xl lg:text-5xl font-bold text-gray-900 mb-3 relative inline-block animated-heading"
-              id="welcome-heading"
-              initial={{ y: 30, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              Welcome to AuraStore
-              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-600 via-purple-600 to-red-600 underline-bar"></div>
-            </motion.h2>
-
-            <style>{`
-            @keyframes expand {
-              0% { transform: scaleX(0); transform-origin: center; }
-              100% { transform: scaleX(1); transform-origin: center; }
-            }
-            
-            @keyframes retract {
-              0% { transform: scaleX(1); transform-origin: center; }
-              100% { transform: scaleX(0); transform-origin: center; }
-            }
-            
-            .underline-bar {
-              transform: scaleX(0);
-              transition: transform 0.3s ease;
-            }
-            
-            .underline-bar.expand {
-              animation: expand 0.8s ease-out forwards;
-            }
-            
-            .underline-bar.retract {
-              animation: retract 0.5s ease-in forwards;
-            }
-          `}</style>
-
-            <motion.p
-              className="text-gray-600 text-sm sm:text-base lg:text-lg max-w-2xl mt-6 sm:mt-8 mx-auto mb-6 sm:mb-8 px-4 sm:px-0"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-              At AuraStore, we redefine modern fashion for the new generation.
-              Our collections blend trendsetting streetwear with timeless
-              comfort, crafted to inspire self-expression, confidence, and
-              individuality. We believe style should be bold, affordable, and
-              effortlessly you. Every piece is created with intention,
-              reflecting the rhythm of Gen Z culture and the spirit of everyday
-              authenticity. From laid-back essentials to standout statement
-              wear, AuraStore invites you to own your vibe and express who you
-              are with confidence.
-            </motion.p>
-
-            <motion.button
-              className="bg-black text-white px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base rounded-full font-semibold hover:bg-gray-800 transition"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              viewport={{ once: true }}
-            >
-              Explore Now
-            </motion.button>
-          </div>
-        </motion.section>
-
-        {/* Best Sellers */}
-        <motion.section
-          className="py-12 bg-white"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-        >
-          <div className="max-w-7xl mx-auto px-4">
-            <motion.h2
-              className="text-2xl sm:text-3xl lg:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-900 relative inline-block animated-heading"
-              initial={{ y: 30, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              Best Sellers
-              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-400 via-gray-600 to-gray-400 opacity-60 underline-bar"></div>
-            </motion.h2>
-            <div className="overflow-x-auto pb-4">
-              <div className="flex space-x-4 w-max lg:grid lg:grid-cols-3 lg:grid-flow-col lg:auto-cols-max ">
-                {bestSellers.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    className="w-48 sm:w-56 lg:w-80 flex-shrink-0"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                  >
-                    <ProductCard
-                      id={product.id}
-                      name={product.name}
-                      price={product.price}
-                      onAddToCart={() =>
-                        console.log("Added to cart:", product.name)
-                      }
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* New Arrivals */}
-        <motion.section
-          className="py-12 bg-gray-50"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-        >
-          <div className="max-w-7xl mx-auto px-4">
-            <motion.h2
-              className="text-2xl sm:text-3xl lg:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-900 relative inline-block animated-heading"
-              initial={{ y: 30, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              New Arrivals
-              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-400 via-gray-600 to-gray-400 opacity-60 underline-bar"></div>
-            </motion.h2>
-            <div className="overflow-x-auto pb-4">
-              <div className="flex space-x-4 w-max lg:grid lg:grid-cols-3 lg:grid-flow-col lg:auto-cols-max ">
-                {newArrivals.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    className="w-48 sm:w-56 lg:w-80 flex-shrink-0"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                  >
-                    <ProductCard
-                      id={product.id}
-                      name={product.name}
-                      price={product.price}
-                      onAddToCart={() =>
-                        console.log("Added to cart:", product.name)
-                      }
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* Featured On */}
-        <section className="py-10 bg-white">
-          <div className="text-center mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 uppercase tracking-wide">
-              Featured On
-            </h2>
-          </div>
-          <ScrollingBrands />
-        </section>
-
-        <section className="relative overflow-hidden">
+      {/* ═══════════════════════════════════════
+          1. HERO — Image with Parallax
+          ═══════════════════════════════════════ */}
+      <section ref={heroRef} className="relative h-screen w-full overflow-hidden -mt-16 sm:-mt-20">
+        <motion.div style={{ scale: heroScale, y: heroY }} className="absolute inset-0 w-full h-full">
           <img
-            src="home_page_traits.png"
-            alt="AuraStore Traits"
+            src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=2000&auto=format&fit=crop"
+            alt="Luxury Fashion"
             className="w-full h-full object-cover"
           />
-        </section>
-
-        {/* Lifestyle Image Section */}
-        <section className="relative aspect-[4/3] sm:aspect-[16/9] lg:aspect-[16/8] overflow-hidden">
-          <img
-            src="/t1.webp"
-            alt="AuraStore Traits"
-            className="w-full h-full object-cover"
+          <div className="absolute inset-0 bg-black/45" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
+          <div
+            className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+            }}
           />
-          {/* Dark overlay (20% black) */}
-          <div className="absolute inset-0 bg-black/50"></div>
+        </motion.div>
 
-          {/* Gradient and text */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-center justify-center text-center">
-            <div className="text-white px-4 sm:px-6">
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3">
-                Premium Quality Guaranteed
-              </h3>
-              <p className="text-sm sm:text-base lg:text-lg text-gray-200">
-                Crafted with the finest materials for lasting comfort and
-                confidence
-              </p>
-            </div>
+        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="mb-8"
+          >
+            <span className="inline-block text-white/50 uppercase tracking-[0.4em] text-[10px] md:text-[11px] font-light border border-white/15 px-6 py-2.5 rounded-full backdrop-blur-sm">
+              Spring / Summer 2026
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 45 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.4, delay: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="text-white font-extralight tracking-[-0.03em] leading-[0.92] mb-8"
+            style={{ fontSize: "clamp(3rem, 9vw, 7.5rem)" }}
+          >
+            Elevate<br />Your Aura
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 1.3, ease: "easeOut" }}
+            className="text-white/40 text-sm md:text-[15px] font-light tracking-wide max-w-sm mb-14 leading-relaxed"
+          >
+            Premium streetwear designed for those who define their own standard.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.6, ease: "easeOut" }}
+          >
+            <Link
+              to="/all-products"
+              className="group relative inline-flex items-center justify-center px-9 py-3.5 bg-white text-gray-900 overflow-hidden rounded-full text-[13px] tracking-wide"
+            >
+              <span className="relative z-10 flex items-center gap-2.5 group-hover:text-white transition-colors duration-500">
+                Discover Collection
+                <svg className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </span>
+              <div className="absolute inset-0 h-full w-full bg-gray-900 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left ease-[0.19,1,0.22,1]" />
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        {/* Scroll Indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 2.5 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-white/30"
+        >
+          <span className="text-[9px] uppercase tracking-[0.35em] font-light">Scroll</span>
+          <div className="w-[1px] h-14 bg-white/10 relative overflow-hidden">
+            <motion.div
+              animate={{ y: ["-100%", "100%"] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 bg-white/50"
+            />
           </div>
-        </section>
+        </motion.div>
+      </section>
 
-        {/* Brand Story / About */}
-        <section className="py-12 sm:py-16 bg-black text-white text-center relative overflow-hidden">
-          <div className="absolute top-[10%] left-[15%] w-1 h-1 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[25%] left-[75%] w-0.5 h-0.5 bg-gray-300/40 rounded-full shadow-gray-300/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[40%] left-[25%] w-1.5 h-1.5 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[15%] left-[85%] w-1 h-1 bg-gray-400/35 rounded-full shadow-gray-400/65 shadow-md animate-pulse"></div>
-          <div className="absolute top-[60%] left-[10%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[35%] left-[90%] w-2 h-2 bg-gray-300/50 rounded-full shadow-gray-300/80 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[80%] left-[20%] w-1 h-1 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[70%] left-[80%] w-0.5 h-0.5 bg-gray-400/40 rounded-full shadow-gray-400/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[50%] left-[5%] w-1.5 h-1.5 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[90%] left-[65%] w-1 h-1 bg-gray-300/35 rounded-full shadow-gray-300/65 shadow-md animate-pulse"></div>
-          <div className="absolute top-[20%] left-[45%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[75%] left-[95%] w-2 h-2 bg-gray-400/45 rounded-full shadow-gray-400/75 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[45%] left-[55%] w-1 h-1 bg-gray-300/50 rounded-full shadow-gray-300/80 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[65%] left-[35%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[30%] left-[65%] w-1.5 h-1.5 bg-gray-400/45 rounded-full shadow-gray-400/75 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[85%] left-[45%] w-1 h-1 bg-white/35 rounded-full shadow-white/65 shadow-md animate-pulse"></div>
-          <div className="absolute top-[55%] left-[75%] w-0.5 h-0.5 bg-gray-300/40 rounded-full shadow-gray-300/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[95%] left-[25%] w-2 h-2 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[5%] left-[55%] w-1 h-1 bg-gray-400/40 rounded-full shadow-gray-400/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[12%] left-[35%] w-0.5 h-0.5 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 relative">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4 relative inline-block animated-heading">
-              About AuraStore
-              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-white/40 via-white/60 to-white/40 opacity-60 underline-bar"></div>
-            </h2>
-            <p className="text-sm sm:text-base lg:text-lg leading-relaxed mb-6 text-gray-300">
-              Redefining fashion for the modern generation — AuraStore blends
-              minimalist design, premium fabrics, and street-inspired
-              aesthetics. Every piece tells a story of individuality and
-              authenticity.
-            </p>
-            <button className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base rounded-full font-semibold hover:bg-gray-200 transition">
-              Learn More
-            </button>
-          </div>
-        </section>
-
-        {/* Contact & Subscribe */}
-        <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-t from-gray-900 to-black text-white relative overflow-hidden">
-          <div className="absolute top-[8%] left-[12%] w-1 h-1 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[22%] left-[78%] w-0.5 h-0.5 bg-gray-300/40 rounded-full shadow-gray-300/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[38%] left-[28%] w-1.5 h-1.5 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[18%] left-[88%] w-1 h-1 bg-gray-400/35 rounded-full shadow-gray-400/65 shadow-md animate-pulse"></div>
-          <div className="absolute top-[58%] left-[8%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[32%] left-[92%] w-2 h-2 bg-gray-300/50 rounded-full shadow-gray-300/80 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[78%] left-[18%] w-1 h-1 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[68%] left-[82%] w-0.5 h-0.5 bg-gray-400/40 rounded-full shadow-gray-400/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[48%] left-[2%] w-1.5 h-1.5 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[88%] left-[68%] w-1 h-1 bg-gray-300/35 rounded-full shadow-gray-300/65 shadow-md animate-pulse"></div>
-          <div className="absolute top-[28%] left-[48%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[72%] left-[98%] w-2 h-2 bg-gray-400/45 rounded-full shadow-gray-400/75 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[42%] left-[58%] w-1 h-1 bg-gray-300/50 rounded-full shadow-gray-300/80 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[62%] left-[38%] w-0.5 h-0.5 bg-white/40 rounded-full shadow-white/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[12%] left-[62%] w-1.5 h-1.5 bg-gray-400/45 rounded-full shadow-gray-400/75 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[82%] left-[42%] w-1 h-1 bg-white/35 rounded-full shadow-white/65 shadow-md animate-pulse"></div>
-          <div className="absolute top-[52%] left-[72%] w-0.5 h-0.5 bg-gray-300/40 rounded-full shadow-gray-300/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[92%] left-[22%] w-2 h-2 bg-white/50 rounded-full shadow-white/80 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[2%] left-[52%] w-1 h-1 bg-gray-400/40 rounded-full shadow-gray-400/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[35%] left-[15%] w-0.5 h-0.5 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[65%] left-[85%] w-1 h-1 bg-gray-300/40 rounded-full shadow-gray-300/70 shadow-md animate-pulse"></div>
-          <div className="absolute top-[75%] left-[5%] w-1.5 h-1.5 bg-white/40 rounded-full shadow-white/70 shadow-lg animate-pulse"></div>
-          <div className="absolute top-[25%] left-[95%] w-0.5 h-0.5 bg-gray-400/35 rounded-full shadow-gray-400/65 shadow-md animate-pulse"></div>
-          <div className="absolute top-[85%] left-[75%] w-1 h-1 bg-white/45 rounded-full shadow-white/75 shadow-lg animate-pulse"></div>
-
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
-            <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-4 relative inline-block animated-heading">
-                Stay Connected
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-white/40 via-white/60 to-white/40 opacity-60 underline-bar"></div>
-              </h2>
+      {/* ═══════════════════════════════════════
+          2. ETHOS MARQUEE
+          ═══════════════════════════════════════ */}
+      <div className="bg-[#0a0a0a] py-5 overflow-hidden relative">
+        <div className="flex whitespace-nowrap animate-[marquee_30s_linear_infinite]">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="flex items-center px-6 md:px-10">
+              <span className="text-white/20 text-[10px] sm:text-[11px] uppercase tracking-[0.3em] font-light">Define your space</span>
+              <span className="mx-6 md:mx-10 text-white/10 text-[8px]">◆</span>
+              <span className="text-white/20 text-[10px] sm:text-[11px] uppercase tracking-[0.3em] font-light">Uncompromising Quality</span>
+              <span className="mx-6 md:mx-10 text-white/10 text-[8px]">◆</span>
+              <span className="text-white/20 text-[10px] sm:text-[11px] uppercase tracking-[0.3em] font-light">Modern Aesthetics</span>
+              <span className="mx-6 md:mx-10 text-white/10 text-[8px]">◆</span>
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
-              <motion.div
-                className="bg-white/5 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-              >
-                <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 relative inline-block">
-                  Contact Us
-                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-white/40 via-white/60 to-white/40 opacity-60 underline-bar"></div>
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-white/5 transition-colors duration-200">
-                    <div className="text-white flex-shrink-0">
-                      <svg
-                        className="w-5 h-5 sm:w-6 sm:h-6"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-                      </svg>
-                    </div>
-                    <span className="text-gray-300 hover:text-white transition-colors text-sm sm:text-base break-all">
-                      aurastore.app@gmail.com
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-white/5 transition-colors duration-200">
-                    <div className="text-white flex-shrink-0">
-                      <svg
-                        className="w-5 h-5 sm:w-6 sm:h-6"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-                      </svg>
-                    </div>
-                    <span className="text-gray-300 hover:text-white transition-colors text-sm sm:text-base">
-                      +91-1234567890
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-white/5 transition-colors duration-200">
-                    <div className="text-white flex-shrink-0">
-                      <svg
-                        className="w-5 h-5 sm:w-6 sm:h-6"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                      </svg>
-                    </div>
-                    <span className="text-gray-300 hover:text-white transition-colors text-sm sm:text-base">
-                      Sonipat
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                className="bg-white/5 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                viewport={{ once: true }}
-              >
-                <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 relative inline-block">
-                  Join Our Community
-                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-white/40 via-white/60 to-white/40 opacity-60 underline-bar"></div>
-                </h3>
-                <p className="text-gray-400 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">
-                  Get early access to drops, exclusive offers, and trend
-                  updates. Be part of the AuraStore family.
-                </p>
-                <form
-                  onSubmit={handleSubscribe}
-                  className="flex flex-col gap-3"
-                >
-                  <div className="relative">
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white/40 focus:bg-white/15 transition-all duration-200 text-sm sm:text-base"
-                      required
-                    />
-                    {showTick && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-all duration-2000 opacity-100 animate-tick-glow">
-                        <div className="relative">
-                          <svg
-                            className="w-6 h-6 text-white drop-shadow-xl animate-scale-in"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              fill="#000"
-                              className="animate-pulse"
-                            />
-                            <path
-                              d="M9 12l2 2 4-4"
-                              stroke="white"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              fill="none"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 rounded-full bg-black opacity-20 blur-md animate-ping"></div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    type="submit"
-                    className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-gray-200 hover:scale-105 transition-all duration-200 relative overflow-hidden group text-sm sm:text-base"
-                  >
-                    <span className="relative z-10">Subscribe</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-white translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
-                  </button>
-                </form>
-              </motion.div>
-            </div>
-          </div>
-        </section>
+          ))}
+        </div>
       </div>
+      <style>{`@keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }`}</style>
 
-      <style>{`
-        @keyframes scale-in {
-          0% {
-            transform: scale(0) rotate(-180deg);
-            opacity: 0;
-          }
-          50% {
-            transform: scale(1.2) rotate(0deg);
-            opacity: 1;
-          }
-          100% {
-            transform: scale(1) rotate(0deg);
-            opacity: 1;
-          }
-        }
+      {/* ═══════════════════════════════════════
+          3. HORIZONTAL BANNER — New Arrivals
+          ═══════════════════════════════════════ */}
+      <section className="py-20 sm:py-28">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+            variants={fadeUp}
+            className="flex items-end justify-between"
+          >
+            <div>
+              <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.3em] text-gray-400 mb-2 block font-light">Just Dropped</span>
+              <h2 className="text-2xl sm:text-3xl md:text-[2.5rem] font-extralight tracking-tight text-gray-900">New Arrivals</h2>
+            </div>
+            <Link to="/all-products" className="group inline-flex items-center gap-3 text-[11px] font-normal uppercase tracking-[0.2em] text-gray-400 hover:text-gray-900 transition-colors duration-500">
+              View All
+              <span className="w-6 h-[0.5px] bg-gray-300 group-hover:w-12 group-hover:bg-gray-900 transition-all duration-500" />
+            </Link>
+          </motion.div>
+        </div>
+        <HorizontalProductBanner products={newArrivals} loading={loadingNew} />
+      </section>
 
-        @keyframes tick-glow {
-          0% {
-            opacity: 0;
-            transform: translateY(-50%) scale(0.8);
-          }
-          20% {
-            opacity: 1;
-            transform: translateY(-50%) scale(1.1);
-          }
-          80% {
-            opacity: 1;
-            transform: translateY(-50%) scale(1);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(-50%) scale(0.9);
-          }
-        }
+      <section ref={beliefRef} className="py-28 sm:py-40 px-4 sm:px-6 lg:px-8 overflow-hidden bg-[#f5f5f7]">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            {/* 3D Rotating Shoe */}
+            <div className="relative flex items-center justify-center order-1 lg:order-1">
+              <div className="relative w-[320px] h-[380px] sm:w-[420px] sm:h-[480px] lg:w-[520px] lg:h-[520px]">
+                {/* Circular orbit tracks */}
+                <div className="absolute inset-[10%] rounded-full border border-gray-200/30 border-dashed pointer-events-none" />
+                <div className="absolute inset-[22%] rounded-full border border-gray-200/20 border-dashed pointer-events-none" />
+                {/* 3D Canvas */}
+                <Shoe3DScene scrollProgress={scrollProgressRef} />
+                {/* 100% Premium Quality badge */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.7 }}
+                  className="absolute bottom-[10%] right-0 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2.5 shadow-lg shadow-black/5 border border-gray-100/50 z-10"
+                >
+                  <div className="text-xl font-extralight text-gray-900">100%</div>
+                  <div className="text-[9px] uppercase tracking-[0.2em] text-gray-400 font-light">Premium Quality</div>
+                </motion.div>
+              </div>
+            </div>
 
-        .animate-scale-in {
-          animation: scale-in 0.6s ease-out;
-        }
+            {/* Text Side */}
+            <motion.div
+              initial={{ opacity: 0, x: 60 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 1, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="order-2 lg:order-2 lg:pl-12"
+            >
+              <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.3em] text-gray-400 font-light mb-6 block">Our Belief</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-[3.2rem] font-extralight text-gray-900 tracking-tight leading-[1.12] mb-8">
+                Fashion should be<br />an extension of<br />who you are.
+              </h2>
+              <p className="text-gray-400 text-[15px] leading-[1.85] mb-10 font-light max-w-md">
+                Not a costume you put on. Every piece we create is designed to let your true self shine through with confidence and quiet elegance.
+              </p>
+              <div className="space-y-6">
+                {[
+                  { num: "01", title: "Premium Materials", desc: "Sourced from the world's finest mills" },
+                  { num: "02", title: "Enduring Design", desc: "Built to outlast trends, not follow them" },
+                  { num: "03", title: "Perfect Craft", desc: "Obsessive attention to every single detail" },
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.3 + i * 0.12 }}
+                    className="flex items-start gap-4"
+                  >
+                    <span className="text-[11px] text-gray-300 font-light mt-0.5 tracking-wider">{item.num}</span>
+                    <div>
+                      <span className="text-[13px] text-gray-800 font-normal tracking-wide block mb-0.5">{item.title}</span>
+                      <span className="text-[12px] text-gray-400 font-light tracking-wide">{item.desc}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
 
-        .animate-tick-glow {
-          animation: tick-glow 2s ease-out forwards;
-        }
-      `}</style>
+      {/* ═══════════════════════════════════════
+          5. CINEMATIC VIDEO INTERLUDE
+          ═══════════════════════════════════════ */}
+      <section ref={videoRef} className="relative h-[70vh] sm:h-[80vh] overflow-hidden">
+        <motion.div style={{ y: videoY }} className="absolute inset-0 -top-[15%] -bottom-[15%]">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover"
+          >
+            <source src="/hero_section/hero_vid4.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-black/50" />
+        </motion.div>
+
+        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
+          <motion.span
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-white/40 text-[10px] sm:text-[11px] uppercase tracking-[0.3em] font-light mb-6"
+          >
+            The Craft
+          </motion.span>
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="text-white font-extralight tracking-tight leading-[1.1] mb-6"
+            style={{ fontSize: "clamp(1.8rem, 5vw, 4rem)" }}
+          >
+            Where precision<br />meets passion.
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-white/30 text-sm sm:text-[15px] font-light max-w-md leading-relaxed"
+          >
+            Every stitch. Every fabric. Every detail — obsessively considered.
+          </motion.p>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          6. HORIZONTAL BANNER — Best Sellers
+          ═══════════════════════════════════════ */}
+      <section className="py-20 sm:py-28">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+            variants={fadeUp}
+            className="flex items-end justify-between"
+          >
+            <div>
+              <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.3em] text-gray-400 mb-2 block font-light">Curated Selection</span>
+              <h2 className="text-2xl sm:text-3xl md:text-[2.5rem] font-extralight tracking-tight text-gray-900">The Signature Edit</h2>
+            </div>
+            <Link to="/all-products" className="group inline-flex items-center gap-3 text-[11px] font-normal uppercase tracking-[0.2em] text-gray-400 hover:text-gray-900 transition-colors duration-500">
+              View All
+              <span className="w-6 h-[0.5px] bg-gray-300 group-hover:w-12 group-hover:bg-gray-900 transition-all duration-500" />
+            </Link>
+          </motion.div>
+        </div>
+        <HorizontalProductBanner products={bestSellers} loading={loadingBest} />
+      </section>
+
+      {/* ═══════════════════════════════════════
+          7. PHILOSOPHY — Cinematic Split
+          ═══════════════════════════════════════ */}
+      <section ref={philosophyRef} className="relative bg-[#f3f3f3] overflow-hidden">
+        <div className="grid lg:grid-cols-2 min-h-[650px]">
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="flex flex-col justify-center p-8 md:p-16 lg:p-24 order-2 lg:order-1"
+          >
+            <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.3em] text-gray-400 font-light mb-6 block">Our Philosophy</span>
+            <h2 className="text-3xl sm:text-4xl lg:text-[3.2rem] font-extralight text-gray-900 tracking-tight leading-[1.15] mb-8">
+              Crafted for the<br className="hidden lg:block" /> contemporary mind.
+            </h2>
+            <p className="text-gray-400 text-[15px] leading-[1.85] mb-12 max-w-md font-light">
+              We focus on premium materials, architectural silhouettes, and enduring design. Every garment is rigorously tested to ensure perfection in fit and form.
+            </p>
+            <Link to="/all-products" className="group relative inline-flex items-center justify-center px-8 py-3.5 border border-gray-300 text-gray-900 overflow-hidden rounded-full text-[13px] max-w-fit w-fit tracking-wide hover:border-gray-900 transition-colors duration-500">
+              <span className="relative z-10 group-hover:text-white transition-colors duration-500 font-light">Explore More</span>
+              <div className="absolute inset-0 h-full w-full bg-gray-900 transform translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-[0.19,1,0.22,1]" />
+            </Link>
+          </motion.div>
+          <div className="relative h-[400px] lg:h-auto overflow-hidden order-1 lg:order-2">
+            <motion.div style={{ y: philImageY }} className="absolute -top-[10%] -bottom-[10%] left-0 right-0">
+              <motion.img
+                initial={{ scale: 1.08 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+                src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=1200&auto=format&fit=crop"
+                alt="Craftsmanship"
+                className="w-full h-full object-cover"
+              />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          8. SCROLL REVEAL — Numbers / Impact
+          ═══════════════════════════════════════ */}
+      <section className="py-28 sm:py-36 bg-[#0a0a0a] relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-0 w-[600px] h-[600px] bg-white/[0.01] rounded-full blur-[150px]" />
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-white/[0.015] rounded-full blur-[120px]" />
+        </div>
+        <div className="max-w-5xl mx-auto px-4 text-center relative z-10">
+          <ScrollRevealText
+            text="Premium fabrics sourced from the finest mills. Designed in-house. Built to outlast trends."
+            className="text-xl sm:text-2xl md:text-[2rem] lg:text-[2.5rem] font-extralight text-white leading-[1.35] tracking-tight mb-20"
+          />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+            {[
+              { number: "50+", label: "Premium Styles" },
+              { number: "100%", label: "Quality Fabrics" },
+              { number: "24h", label: "Fast Dispatch" },
+              { number: "10K+", label: "Happy Customers" },
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="text-center"
+              >
+                <div className="text-3xl sm:text-4xl md:text-5xl font-extralight text-white mb-2 tracking-tight">{stat.number}</div>
+                <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-white/25 font-light">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          9. COLLECTIONS — Category Grid
+          ═══════════════════════════════════════ */}
+      <section className="py-28 sm:py-36 px-4 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="text-center mb-20"
+        >
+          <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.3em] text-gray-400 font-light mb-3 block">Shop by Category</span>
+          <h2 className="text-3xl sm:text-4xl md:text-[3.2rem] font-extralight tracking-tight text-gray-900">Explore Collections</h2>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.8 }}>
+            <Link to="/sneakers" className="group relative h-[400px] md:h-[520px] overflow-hidden rounded-2xl block">
+              <motion.img whileHover={{ scale: 1.04 }} transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }} src="https://images.vegnonveg.com/resized/1360X1600/14956/jordan-air-jordan-1-retro-high-og-pale-ivorypsychic-blue-coconut-milk-69ba2de7b7b58.jpg?format=webp" alt="Sneakers" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
+              <div className="absolute bottom-8 left-8">
+                <h3 className="text-2xl sm:text-3xl font-light text-white mb-2 tracking-tight">Sneakers</h3>
+                <span className="text-white/50 text-sm flex items-center gap-2 font-light tracking-wide group-hover:text-white/80 transition-colors duration-500">
+                  Shop Collection
+                  <svg className="w-4 h-4 transform group-hover:translate-x-2 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </span>
+              </div>
+            </Link>
+          </motion.div>
+          <div className="grid grid-cols-1 gap-4">
+            <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.8, delay: 0.1 }}>
+              <Link to="/upper-wear" className="group relative h-[200px] md:h-[252px] overflow-hidden rounded-2xl block">
+                <motion.img whileHover={{ scale: 1.04 }} transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }} src="https://images.bewakoof.com/t1080/men-s-black-shine-hustle-typography-oversized-jacket-597145-1732876343-1.jpg" alt="Upper Wear" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6"><h3 className="text-xl sm:text-2xl font-light text-white tracking-tight">Upper Wear</h3></div>
+              </Link>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.8, delay: 0.2 }}>
+              <Link to="/bottom-wear" className="group relative h-[200px] md:h-[252px] overflow-hidden rounded-2xl block">
+                <motion.img whileHover={{ scale: 1.04 }} transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }} src="https://images.bewakoof.com/t1080/690782_2026-03-23t10-56-13_1.jpg" alt="Bottom Wear" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6"><h3 className="text-xl sm:text-2xl font-light text-white tracking-tight">Bottom Wear</h3></div>
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          10. FEATURED IN
+          ═══════════════════════════════════════ */}
+      <section className="bg-white py-20 border-y border-gray-100/80 overflow-hidden">
+        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="max-w-[1400px] mx-auto px-4 text-center mb-10">
+          <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.3em] text-gray-400 font-light">Featured In</span>
+        </motion.div>
+        <ScrollingBrands />
+      </section>
+
+      {/* ═══════════════════════════════════════
+          11. NEWSLETTER
+          ═══════════════════════════════════════ */}
+      <section className="py-28 sm:py-36 px-4 bg-[#0a0a0a] text-white relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-white/[0.015] rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-white/[0.02] rounded-full blur-[100px]" />
+        </div>
+        <div className="max-w-xl mx-auto text-center relative z-10">
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}>
+            <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.3em] text-white/25 font-light mb-6 block">Stay Connected</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extralight mb-5 tracking-tight">Join the Inner Circle</h2>
+            <p className="text-white/25 text-sm leading-relaxed mb-12 font-light max-w-sm mx-auto">
+              Subscribe for early access to drops, exclusive previews, and special privileges.
+            </p>
+            <form onSubmit={handleSubscribe} className="relative max-w-md mx-auto">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email address"
+                required
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-full py-4 pl-6 pr-32 text-white placeholder-white/20 focus:outline-none focus:border-white/20 transition-all duration-500 text-sm font-light"
+              />
+              <button
+                type="submit"
+                className="absolute right-1.5 top-1.5 bottom-1.5 bg-white text-gray-900 px-6 rounded-full text-[11px] uppercase tracking-[0.15em] hover:bg-gray-100 transition-all duration-300 flex items-center justify-center overflow-hidden font-normal"
+              >
+                <AnimatePresence mode="wait">
+                  {showTick ? (
+                    <motion.svg key="tick" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="w-4 h-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </motion.svg>
+                  ) : (
+                    <motion.span key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>Subscribe</motion.span>
+                  )}
+                </AnimatePresence>
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      </section>
+
     </div>
   );
 }

@@ -38,6 +38,19 @@ export const CartProvider = ({ children }) => {
     initData();
   }, [isLoggedIn, user, authLoading]);
 
+  const formatCartItems = (items) => {
+    return items.map(item => ({
+      id: item.product.id,
+      name: item.product.name,
+      price: item.product.price,
+      originalPrice: item.product.originalPrice,
+      imageUrl: item.product.imageUrl,
+      size: item.size,
+      quantity: item.quantity,
+      cartItemId: item.id
+    }));
+  };
+
   const fetchCart = async (showLoading = true) => {
     if (isFetchingCart) return;
     setIsFetchingCart(true);
@@ -54,17 +67,7 @@ export const CartProvider = ({ children }) => {
       });
       if (response.ok) {
         const data = await response.json();
-        const formattedItems = data.items.map(item => ({
-          id: item.product.id,
-          name: item.product.name,
-          price: item.product.price,
-          originalPrice: item.product.originalPrice,
-          imageUrl: item.product.imageUrl,
-          size: item.size,
-          quantity: item.quantity,
-          cartItemId: item.id
-        }));
-        setCartItems(formattedItems);
+        setCartItems(formatCartItems(data.items));
       }
     } catch (error) {
       console.error('Error fetching cart:', error);
@@ -127,15 +130,15 @@ export const CartProvider = ({ children }) => {
         body: JSON.stringify({ productId: product.id, size, quantity: 1 })
       });
       
-      if (response.ok) {
-        await fetchCart();
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setCartItems(formatCartItems(data.items));
       } else {
-        // Revert on failure
-        await fetchCart();
+        await fetchCart(false); // Revert/Sync on error
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
-      await fetchCart();
+      await fetchCart(false);
     }
   };
 
@@ -157,7 +160,10 @@ export const CartProvider = ({ children }) => {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) {
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setCartItems(formatCartItems(data.items));
+      } else {
         await fetchCart(false);
       }
     } catch (error) {
@@ -201,7 +207,10 @@ export const CartProvider = ({ children }) => {
         },
         body: JSON.stringify({ quantity })
       });
-      if (!response.ok) {
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setCartItems(formatCartItems(data.items));
+      } else {
         await fetchCart(false);
       }
     } catch (error) {
@@ -286,6 +295,10 @@ export const CartProvider = ({ children }) => {
     return wishlistItems.some(item => item.id === productId);
   };
 
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => total + (parseFloat(item.price) * item.quantity), 0);
   };
@@ -324,6 +337,7 @@ export const CartProvider = ({ children }) => {
     isLoadingCart,
     isLoadingWishlist,
     isItemPending,
+    clearCart,
   };
 
   return (

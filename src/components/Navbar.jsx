@@ -10,11 +10,23 @@ function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const mobileSearchRef = useRef(null);
   const location = useLocation();
   
   const cartCount = getCartCount();
   const wishlistCount = getWishlistCount();
+  const isHome = location.pathname === "/";
+
+  // Track scroll position for transparent → solid navbar transition
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 60);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // initial check
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -26,18 +38,31 @@ function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Dynamic navbar classes based on page and scroll
+  const isTransparent = isHome && !scrolled;
+
+  const navClasses = isTransparent
+    ? "fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] bg-transparent border-b border-transparent"
+    : "fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] bg-white/80 backdrop-blur-2xl border-b border-gray-200/50";
+
+  const linkColor = isTransparent ? "text-white/80 hover:text-white" : "text-gray-600 hover:text-gray-900";
+  const linkActiveColor = isTransparent ? "text-white" : "text-gray-900";
+  const iconColor = isTransparent ? "text-white/80 hover:text-white" : "text-gray-600 hover:text-gray-900";
+  const saleColor = isTransparent ? "text-red-300 hover:text-red-200" : "text-red-500 hover:text-red-600";
+  const saleActiveColor = isTransparent ? "text-red-200" : "text-red-600";
+
   return (
-    <nav className="bg-gradient-to-r from-gray-200 via-white to-gray-200 border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
-      <div className="max-w-7xl mx-auto px-1 sm:px-2">
+    <nav className={navClasses}>
+      <div className="max-w-7xl mx-auto px-2 sm:px-4">
         <div className="flex items-center h-16 sm:h-20 justify-between">
           {/* Left: Mobile menu + Logo */}
           <div className="flex items-center">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="lg:hidden p-2 rounded-md text-gray-700 hover:text-black focus:outline-none mr-2"
+              className={`lg:hidden p-2 rounded-md focus:outline-none mr-2 transition-colors duration-300 ${iconColor}`}
             >
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -46,14 +71,14 @@ function Navbar() {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     d="M6 18L18 6M6 6l12 12"
                   />
                 ) : (
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     d="M4 6h16M4 12h16M4 18h16"
                   />
                 )}
@@ -63,7 +88,9 @@ function Navbar() {
               <img
                 src="/final_logo_2.png"
                 alt="AuraStore"
-                className="h-8 sm:h-11 w-auto"
+                className={`h-8 sm:h-10 w-auto transition-all duration-500 ${
+                  isTransparent ? "brightness-0 invert" : ""
+                }`}
               />
             </Link>
           </div>
@@ -72,93 +99,58 @@ function Navbar() {
           <div className="hidden lg:flex items-center space-x-10">
             <Link
               to="/upper-wear"
-              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
-                location.pathname === "/upper-wear"
-                  ? "text-black transform translate-y-[-2px]"
-                  : "text-gray-800"
+              className={`text-[11px] font-light tracking-[0.15em] uppercase transition-all duration-300 ${
+                location.pathname === "/upper-wear" ? linkActiveColor : linkColor
               }`}
-              style={
-                location.pathname === "/upper-wear"
-                  ? { textShadow: "0 3px 6px rgba(0, 0, 0, 0.3)" }
-                  : {}
-              }
             >
-              UPPER WEAR
+              Upper Wear
             </Link>
             <Link
               to="/bottom-wear"
-              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
-                location.pathname === "/bottom-wear"
-                  ? "text-black transform translate-y-[-2px]"
-                  : "text-gray-800"
+              className={`text-[11px] font-light tracking-[0.15em] uppercase transition-all duration-300 ${
+                location.pathname === "/bottom-wear" ? linkActiveColor : linkColor
               }`}
-              style={
-                location.pathname === "/bottom-wear"
-                  ? { textShadow: "0 3px 6px rgba(0, 0, 0, 0.3)" }
-                  : {}
-              }
             >
-              BOTTOM WEAR
+              Bottom Wear
             </Link>
             <Link
               to="/sneakers"
-              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
-                location.pathname === "/sneakers"
-                  ? "text-black transform translate-y-[-2px]"
-                  : "text-gray-800"
+              className={`text-[11px] font-light tracking-[0.15em] uppercase transition-all duration-300 ${
+                location.pathname === "/sneakers" ? linkActiveColor : linkColor
               }`}
-              style={
-                location.pathname === "/sneakers"
-                  ? { textShadow: "0 3px 6px rgba(0, 0, 0, 0.3)" }
-                  : {}
-              }
             >
-              SNEAKERS
+              Sneakers
             </Link>
             <Link
               to="/sale"
-              className={`text-sm font-medium hover:text-red-700 transition uppercase tracking-wide relative ${
-                location.pathname === "/sale"
-                  ? "text-red-700 transform translate-y-[-2px]"
-                  : "text-red-600"
+              className={`text-[11px] font-light tracking-[0.15em] uppercase transition-all duration-300 ${
+                location.pathname === "/sale" ? saleActiveColor : saleColor
               }`}
-              style={
-                location.pathname === "/sale"
-                  ? { textShadow: "0 3px 6px rgba(220, 38, 38, 0.4)" }
-                  : {}
-              }
             >
-              SALE
+              Sale
             </Link>
             <Link
               to="/all-products"
-              className={`text-sm font-medium hover:text-black transition uppercase tracking-wide relative ${
-                location.pathname === "/all-products"
-                  ? "text-black transform translate-y-[-2px]"
-                  : "text-gray-800"
+              className={`text-[11px] font-light tracking-[0.15em] uppercase transition-all duration-300 ${
+                location.pathname === "/all-products" ? linkActiveColor : linkColor
               }`}
-              style={
-                location.pathname === "/all-products"
-                  ? { textShadow: "0 3px 6px rgba(0, 0, 0, 0.3)" }
-                  : {}
-              }
             >
-              ALL PRODUCTS
+              All Products
             </Link>
           </div>
 
           {/* Right: Search + Icons */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Search - desktop only */}
             <div className="hidden lg:flex">
               <SearchBox />
             </div>
             <button
               onClick={() => setShowMobileSearch(true)}
-              className="lg:hidden p-2 text-gray-700 hover:text-black transition"
+              className={`lg:hidden p-2 transition-colors duration-300 ${iconColor}`}
             >
               <svg
-                className="w-5 h-5 sm:w-6 sm:h-6"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -171,13 +163,17 @@ function Navbar() {
                 />
               </svg>
             </button>
-            <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="flex items-center space-x-1 sm:space-x-2">
             {/* Account Icon with dropdown */}
             <div className="relative">
               {isLoggedIn ? (
                 <Link
                   to="/profile"
-                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black text-white text-xs font-semibold hover:bg-gray-800 transition"
+                  className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs font-normal transition-all duration-300 ${
+                    isTransparent
+                      ? "bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+                      : "bg-gray-900 text-white hover:bg-gray-700"
+                  }`}
                   title={user?.name}
                 >
                   {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase()}
@@ -186,10 +182,10 @@ function Navbar() {
                 <>
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className="p-2 text-gray-700 hover:text-black transition"
+                    className={`p-2 transition-colors duration-300 ${iconColor}`}
                   >
                     <svg
-                      className="w-5 h-5 sm:w-6 sm:h-6"
+                      className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -204,40 +200,39 @@ function Navbar() {
                   </button>
                   {showDropdown && (
                     <div
-                      className="absolute right-0 mt-2 w-64 sm:w-72 bg-white rounded-xl shadow-2xl border-2 border-gray-300 z-50 animate-fade-in"
+                      className="absolute right-0 mt-2 w-64 sm:w-72 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-gray-200/50 z-50 animate-fade-in"
                       style={{
-                        boxShadow:
-                          "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)",
+                        boxShadow: "0 25px 60px -12px rgba(0, 0, 0, 0.15)",
                       }}
                     >
-                      <div className="p-4 sm:p-5">
+                      <div className="p-5">
                         <div className="text-center mb-4">
-                          <h3 className="text-sm sm:text-base font-bold text-black mb-1">
-                            ACCOUNT
+                          <h3 className="text-xs font-normal text-gray-900 mb-1 uppercase tracking-[0.15em]">
+                            Account
                           </h3>
-                          <div className="w-8 h-0.5 bg-black mx-auto"></div>
+                          <div className="w-6 h-[0.5px] bg-gray-300 mx-auto" />
                         </div>
-                        <div className="flex gap-2 sm:gap-3">
+                        <div className="flex gap-3">
                           <div className="flex-1 text-center">
-                            <p className="text-xs text-gray-500 mb-2">
+                            <p className="text-[10px] text-gray-400 mb-2 font-light">
                               Member?
                             </p>
                             <Link
                               to="/login"
                               onClick={() => setShowDropdown(false)}
-                              className="w-full bg-black text-white py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-all duration-200 flex items-center justify-center"
+                              className="w-full bg-gray-900 text-white py-2.5 px-3 rounded-xl text-xs font-light hover:bg-gray-700 transition-all duration-300 flex items-center justify-center tracking-wide"
                             >
                               Login
                             </Link>
                           </div>
                           <div className="flex-1 text-center">
-                            <p className="text-xs text-gray-500 mb-2">
+                            <p className="text-[10px] text-gray-400 mb-2 font-light">
                               New here?
                             </p>
                             <Link
                               to="/signup"
                               onClick={() => setShowDropdown(false)}
-                              className="w-full bg-white text-black border border-gray-300 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-50 hover:border-black transition-all duration-200 flex items-center justify-center"
+                              className="w-full bg-white text-gray-900 border border-gray-200 py-2.5 px-3 rounded-xl text-xs font-light hover:bg-gray-50 hover:border-gray-900 transition-all duration-300 flex items-center justify-center tracking-wide"
                             >
                               Sign Up
                             </Link>
@@ -246,21 +241,6 @@ function Navbar() {
                       </div>
                     </div>
                   )}
-                  <style jsx>{`
-                    @keyframes fade-in {
-                      from {
-                        opacity: 0;
-                        transform: translateY(-10px);
-                      }
-                      to {
-                        opacity: 1;
-                        transform: translateY(0);
-                      }
-                    }
-                    .animate-fade-in {
-                      animation: fade-in 0.3s ease-out forwards;
-                    }
-                  `}</style>
                 </>
               )}
             </div>
@@ -268,10 +248,10 @@ function Navbar() {
             {/* Wishlist Icon */}
             <Link
               to="/wishlist"
-              className="p-2 text-gray-700 hover:text-black transition relative"
+              className={`p-2 transition-colors duration-300 relative ${iconColor}`}
             >
               <svg
-                className="w-5 h-5 sm:w-6 sm:h-6"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -284,7 +264,7 @@ function Navbar() {
                 />
               </svg>
               {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-[10px]">
+                <span className="absolute -top-0.5 -right-0.5 bg-gray-900 text-white text-[9px] rounded-full h-4 w-4 flex items-center justify-center font-light">
                   {wishlistCount}
                 </span>
               )}
@@ -293,10 +273,10 @@ function Navbar() {
             {/* Cart Icon */}
             <Link
               to="/cart"
-              className="p-2 text-gray-700 hover:text-black transition relative"
+              className={`p-2 transition-colors duration-300 relative ${iconColor}`}
             >
               <svg
-                className="w-5 h-5 sm:w-6 sm:h-6"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -309,7 +289,7 @@ function Navbar() {
                 />
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-[10px]">
+                <span className="absolute -top-0.5 -right-0.5 bg-gray-900 text-white text-[9px] rounded-full h-4 w-4 flex items-center justify-center font-light">
                   {cartCount}
                 </span>
               )}
@@ -322,9 +302,9 @@ function Navbar() {
         {showMobileSearch && (
           <>
             <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-40"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
               onClick={() => setShowMobileSearch(false)}
-            ></div>
+            />
             <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md z-50" ref={mobileSearchRef}>
               <SearchBox onSearchSubmit={() => setShowMobileSearch(false)} autoFocus={true} />
             </div>
@@ -336,19 +316,19 @@ function Navbar() {
           <>
             {/* Backdrop */}
             <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-40"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
               onClick={() => setShowMobileMenu(false)}
-            ></div>
+            />
 
             {/* Slide-in menu */}
-            <div className="fixed top-0 left-0 h-full w-[70%] bg-white z-50 transform transition-transform duration-300 ease-in-out">
+            <div className="fixed top-0 left-0 h-full w-[75%] max-w-[320px] bg-white/95 backdrop-blur-2xl z-50 transform transition-transform duration-500 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]">
               {/* Close button */}
               <button
                 onClick={() => setShowMobileMenu(false)}
-                className="absolute top-4 right-4 p-2 text-gray-700 hover:text-black transition"
+                className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-900 transition-colors duration-300"
               >
                 <svg
-                  className="w-6 h-6"
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -356,68 +336,68 @@ function Navbar() {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
               </button>
 
-              <div className="p-6 pt-20">
-                <div className="space-y-6">
+              <div className="p-8 pt-24">
+                <div className="space-y-8">
                   <Link
                     to="/upper-wear"
                     onClick={() => setShowMobileMenu(false)}
-                    className={`block text-lg font-medium hover:text-black transition uppercase tracking-wide ${
+                    className={`block text-lg font-light tracking-wide transition-colors duration-300 ${
                       location.pathname === "/upper-wear"
-                        ? "text-black"
-                        : "text-gray-800"
+                        ? "text-gray-900"
+                        : "text-gray-400 hover:text-gray-900"
                     }`}
                   >
-                    UPPER WEAR
+                    Upper Wear
                   </Link>
                   <Link
                     to="/bottom-wear"
                     onClick={() => setShowMobileMenu(false)}
-                    className={`block text-lg font-medium hover:text-black transition uppercase tracking-wide ${
+                    className={`block text-lg font-light tracking-wide transition-colors duration-300 ${
                       location.pathname === "/bottom-wear"
-                        ? "text-black"
-                        : "text-gray-800"
+                        ? "text-gray-900"
+                        : "text-gray-400 hover:text-gray-900"
                     }`}
                   >
-                    BOTTOM WEAR
+                    Bottom Wear
                   </Link>
                   <Link
                     to="/sneakers"
                     onClick={() => setShowMobileMenu(false)}
-                    className={`block text-lg font-medium hover:text-black transition uppercase tracking-wide ${
+                    className={`block text-lg font-light tracking-wide transition-colors duration-300 ${
                       location.pathname === "/sneakers"
-                        ? "text-black"
-                        : "text-gray-800"
+                        ? "text-gray-900"
+                        : "text-gray-400 hover:text-gray-900"
                     }`}
                   >
-                    SNEAKERS
+                    Sneakers
                   </Link>
                   <Link
                     to="/sale"
                     onClick={() => setShowMobileMenu(false)}
-                    className={`block text-lg font-medium hover:text-red-700 transition uppercase tracking-wide ${
+                    className={`block text-lg font-light tracking-wide transition-colors duration-300 ${
                       location.pathname === "/sale"
-                        ? "text-red-700"
-                        : "text-red-600"
+                        ? "text-red-500"
+                        : "text-red-400 hover:text-red-500"
                     }`}
                   >
-                    SALE
+                    Sale
                   </Link>
                   <Link
                     to="/all-products"
                     onClick={() => setShowMobileMenu(false)}
-                    className={`block text-lg font-medium hover:text-black transition uppercase tracking-wide ${
+                    className={`block text-lg font-light tracking-wide transition-colors duration-300 ${
                       location.pathname === "/all-products"
-                        ? "text-black"
-                        : "text-gray-800"
+                        ? "text-gray-900"
+                        : "text-gray-400 hover:text-gray-900"
                     }`}
                   >
-                    ALL PRODUCTS
+                    All Products
                   </Link>
                 </div>
               </div>

@@ -62,6 +62,7 @@ function Wishlist() {
                   price={parseFloat(item.price)}
                   originalPrice={item.originalPrice ? parseFloat(item.originalPrice) : null}
                   image={item.imageUrl}
+                  category={item.category}
                 />
               ))}
             </div>

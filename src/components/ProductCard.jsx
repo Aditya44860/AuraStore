@@ -3,15 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import SizeModal from './SizeModal'
 
-function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
+function ProductCard({ id, name, price, originalPrice, image, gallery = [], category, onAddToCart }) {
   const navigate = useNavigate()
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart()
   const [isWishlisted, setIsWishlisted] = useState(() => isInWishlist(id))
   const [showSizeModal, setShowSizeModal] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
-  
+
   const isOnSale = originalPrice && originalPrice > price
   const discount = isOnSale ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
+
+  const images = gallery.length > 0 ? [image, ...gallery] : [image];
 
   const toggleWishlist = () => {
     if (isWishlisted) {
@@ -19,7 +21,7 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
       setIsWishlisted(false)
     } else {
       setIsWishlisted(true)
-      addToWishlist({ id, name, price, originalPrice, imageUrl: image }).then(success => {
+      addToWishlist({ id, name, price, originalPrice, imageUrl: image, category }).then(success => {
         if (success === false) {
           setIsWishlisted(false)
         }
@@ -32,10 +34,13 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 overflow-hidden hover:border-black transition-all relative cursor-pointer" onClick={handleProductClick}>
+    <div
+      className="product-card relative bg-white rounded-xl border border-gray-100/80 overflow-hidden cursor-pointer group"
+      onClick={handleProductClick}
+    >
       {isOnSale && (
-        <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold z-10">
-          {discount}% OFF
+        <div className="absolute top-3 left-3 bg-gray-900 text-white px-3 py-1 rounded-full text-[10px] font-light z-10 tracking-[0.1em] uppercase">
+          {discount}% Off
         </div>
       )}
       <button
@@ -43,41 +48,51 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
           e.stopPropagation()
           toggleWishlist()
         }}
-        className="absolute top-2 sm:top-3 right-2 sm:right-3 z-10 p-1 bg-white/90 hover:bg-white transition rounded-full"
+        className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white rounded-full shadow-sm transition-all duration-300"
       >
-        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill={isWishlisted ? "black" : "none"} stroke={isWishlisted ? "black" : "gray"} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        <svg
+          className={`w-4 h-4 transition-all duration-400 ${isWishlisted ? 'scale-110' : 'scale-100'}`}
+          fill={isWishlisted ? "#1a1a1a" : "none"}
+          stroke={isWishlisted ? "#1a1a1a" : "#9ca3af"}
+          strokeWidth={1.5}
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
       </button>
-      <div className="w-full bg-gray-100 flex items-center justify-center aspect-square sm:aspect-[4/5] overflow-hidden">
-        {image ? (
-          <img 
-            src={image} 
-            alt={name}
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
-            }}
-          />
-        ) : null}
-        <span 
-          className="text-gray-400 text-xs sm:text-sm flex items-center justify-center w-full h-full"
-          style={{ display: image ? 'none' : 'flex' }}
-        >
-          Product Image
-        </span>
+      <div
+        className="relative w-full bg-gray-50 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory hide-scrollbar aspect-[3/4]"
+        style={{ overscrollBehaviorX: "contain" }}
+      >
+        {images.length > 0 && images[0] ? (
+          images.map((img, idx) => (
+            <div key={idx} className="min-w-full snap-start relative h-full">
+              <img
+                src={img}
+                alt={`${name} angle ${idx + 1}`}
+                className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-[1.03]"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+          ))
+        ) : (
+          <span className="text-gray-300 text-xs flex items-center justify-center w-full h-full absolute inset-0 font-light">
+            Product Image
+          </span>
+        )}
       </div>
-      <div className="p-3 sm:p-4">
-        <h3 className="text-sm sm:text-base font-medium text-black mb-2 line-clamp-2">{name}</h3>
-        <div className="flex flex-col gap-2">
+      <div className="p-4">
+        <h3 className="text-[13px] font-light text-gray-900 mb-2.5 line-clamp-2 leading-snug tracking-wide">{name}</h3>
+        <div className="flex flex-col gap-3">
           {originalPrice ? (
             <div className="flex items-center gap-2">
-              <span className="text-base sm:text-lg font-bold text-black">₹{price}</span>
-              <span className="text-sm text-gray-500 line-through">₹{originalPrice}</span>
+              <span className="text-[15px] font-normal text-gray-900">₹{price}</span>
+              <span className="text-[13px] text-gray-300 line-through font-light">₹{originalPrice}</span>
             </div>
           ) : (
-            <span className="text-base sm:text-lg font-bold text-black">₹{price}</span>
+            <span className="text-[15px] font-normal text-gray-900">₹{price}</span>
           )}
           <button
             onClick={(e) => {
@@ -85,29 +100,31 @@ function ProductCard({ id, name, price, originalPrice, image, onAddToCart }) {
               if (onAddToCart) {
                 setIsPressed(true)
                 onAddToCart()
+                removeFromWishlist(id)
                 setTimeout(() => setIsPressed(false), 1000)
               } else {
                 setShowSizeModal(true)
               }
             }}
-            className={`px-4 py-2 text-sm font-medium transition-all duration-200 w-full ${
-              isPressed 
-                ? 'bg-white text-black border border-black scale-95 shadow-inner' 
-                : 'bg-black text-white hover:bg-gray-800'
-            }`}
+            className={`px-4 py-2.5 text-[11px] font-light tracking-[0.12em] uppercase rounded-lg transition-all duration-500 w-full ${isPressed
+              ? 'bg-gray-900 text-white scale-[0.97]'
+              : 'bg-gray-900 text-white hover:bg-gray-700 active:scale-[0.97]'
+              }`}
           >
-            {isPressed ? 'Added!' : 'Add to Cart'}
+            {isPressed ? '✓ Added' : 'Add to Cart'}
           </button>
         </div>
       </div>
-      
+
       <SizeModal
         isOpen={showSizeModal}
         onClose={() => setShowSizeModal(false)}
         product={{ id, name, price, originalPrice, imageUrl: image }}
+        category={category}
         onAddToCart={(size) => {
           setIsPressed(true)
           addToCart({ id, name, price, originalPrice, imageUrl: image }, size)
+          removeFromWishlist(id)
           setTimeout(() => setIsPressed(false), 1000)
           setShowSizeModal(false)
         }}

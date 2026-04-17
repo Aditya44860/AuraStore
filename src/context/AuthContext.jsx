@@ -7,8 +7,11 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [user, setUser] = useState(null)
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('token'))
+  const [user, setUser] = useState(() => {
+    const cached = localStorage.getItem('user')
+    return cached ? JSON.parse(cached) : null
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -34,6 +37,7 @@ export function AuthProvider({ children }) {
         if (data?.user) {
           setIsLoggedIn(true)
           setUser(data.user)
+          localStorage.setItem('user', JSON.stringify(data.user))
         }
       })
       .catch((err) => {
@@ -50,16 +54,19 @@ export function AuthProvider({ children }) {
   const login = (userData) => {
     setIsLoggedIn(true)
     setUser(userData)
+    localStorage.setItem('user', JSON.stringify(userData))
   }
 
   const logout = () => {
     setIsLoggedIn(false)
     setUser(null)
     localStorage.removeItem('token')
+    localStorage.removeItem('user')
   }
 
   const updateUser = (userData) => {
     setUser(userData)
+    localStorage.setItem('user', JSON.stringify(userData))
   }
 
   const value = {

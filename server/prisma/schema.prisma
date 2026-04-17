@@ -38,6 +38,9 @@ enum PaymentStatus {
 enum AddressType {
   BILLING
   SHIPPING
+  HOME
+  WORK
+  OTHER
 }
 
 // --------------------
@@ -79,6 +82,7 @@ model Product {
   isActive    Boolean     @default(true)
   isOnSale    Boolean     @default(false)
   imageUrl    String?
+  gallery     String[]    @default([])
   subcategory String?    // hoodies, tshirts, jackets, shorts, jeans, cargos
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -115,6 +119,9 @@ model Order {
   paymentId  String?      @unique
   payment    Payment?     @relation(fields: [paymentId], references: [id])
 
+  shippingAddressId String?
+  shippingAddress   Address? @relation(fields: [shippingAddressId], references: [id])
+
   items      OrderItem[]
 }
 
@@ -139,6 +146,7 @@ model OrderItem {
   id        String    @id @default(uuid())
   quantity  Int
   price     Decimal   @db.Decimal(10,2)
+  size      String    @default("M")
 
   orderId   String
   order     Order     @relation(fields: [orderId], references: [id])
@@ -157,9 +165,14 @@ model Address {
   state      String?
   country    String
   postalCode String
+  fullName   String?
+  phone      String?
+  otherLabel String?  // For naming "OTHER" category (e.g., "Parents House")
 
   userId     Int
   user       User        @relation(fields: [userId], references: [id])
+
+  orders     Order[]
 }
 
 model FavouriteItems {
@@ -206,6 +219,7 @@ model CartItem {
 model Review {
   id         String    @id @default(uuid())
   rating     Int
+  title      String?
   comment    String?
   createdAt  DateTime  @default(now())
 

@@ -105,9 +105,9 @@ function SearchBox({ onSearchSubmit, autoFocus = false }) {
 
   return (
     <div className="relative w-full sm:w-64 lg:w-72" ref={dropdownRef}>
-      <div className="relative flex items-center bg-gray-100 rounded-full px-3 sm:px-4 py-2 shadow-sm">
+      <div className="relative flex items-center bg-gray-100/70 rounded-full px-3 sm:px-4 py-2">
       <svg
-        className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0"
+        className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -115,7 +115,7 @@ function SearchBox({ onSearchSubmit, autoFocus = false }) {
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth={2}
+          strokeWidth={1.5}
           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
         />
       </svg>
@@ -131,7 +131,7 @@ function SearchBox({ onSearchSubmit, autoFocus = false }) {
             {searchTexts.map((text, i) => (
               <div
                 key={i}
-                className="text-xs sm:text-sm text-gray-500 h-5 flex items-center whitespace-nowrap"
+                className="text-[12px] sm:text-[13px] text-gray-400 h-5 flex items-center whitespace-nowrap font-light"
               >
                 Try Searching {text}...
               </div>
@@ -143,7 +143,7 @@ function SearchBox({ onSearchSubmit, autoFocus = false }) {
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="absolute top-0 left-0 w-full bg-transparent outline-none text-xs sm:text-sm text-gray-700 placeholder-gray-500"
+          className="absolute top-0 left-0 w-full bg-transparent outline-none text-[12px] sm:text-[13px] text-gray-700 placeholder-gray-400 font-light"
           placeholder={isFocused || inputValue ? "Search products..." : ""}
           onFocus={() => {
             setIsFocused(true);
@@ -156,21 +156,21 @@ function SearchBox({ onSearchSubmit, autoFocus = false }) {
       </div>
 
       {showResults && searchResults.length > 0 && (
-        <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full mt-2 w-full bg-white/95 backdrop-blur-2xl rounded-xl shadow-2xl border border-gray-100/50 z-50 max-h-80 overflow-y-auto">
           {searchResults.map((product) => (
             <div
               key={product.id}
               onClick={() => handleProductClick(product.id)}
-              className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+              className="flex items-center gap-3 p-3 hover:bg-gray-50/80 cursor-pointer border-b border-gray-100/50 last:border-b-0 transition-colors duration-200"
             >
-              <div className="w-12 h-12 bg-gray-100 rounded flex-shrink-0">
+              <div className="w-11 h-11 bg-gray-50 rounded-lg flex-shrink-0 overflow-hidden">
                 {product.imageUrl && (
-                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover rounded" />
+                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-                <p className="text-sm text-gray-600">₹{parseFloat(product.price)}</p>
+                <p className="text-[13px] font-light text-gray-900 truncate">{product.name}</p>
+                <p className="text-[12px] text-gray-400 font-light">₹{parseFloat(product.price)}</p>
               </div>
             </div>
           ))}

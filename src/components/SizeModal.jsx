@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
-function SizeModal({ isOpen, onClose, product, onAddToCart }) {
+function SizeModal({ isOpen, onClose, product, category, onAddToCart }) {
   const [selectedSize, setSelectedSize] = useState('');
   const [isPressed, setIsPressed] = useState(false);
-  const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+  
+  const categoryName = typeof category === 'string' ? category : category?.name;
+  const isSneaker = categoryName?.toLowerCase() === 'sneakers' || 
+                    product?.category?.name?.toLowerCase() === 'sneakers';
+  
+  const clothingSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+  const shoeSizes = ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11', 'UK 12'];
+  const sizes = isSneaker ? shoeSizes : clothingSizes;
 
   useEffect(() => {
     if (isOpen) {
@@ -21,94 +29,93 @@ function SizeModal({ isOpen, onClose, product, onAddToCart }) {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) setSelectedSize('');
+  }, [isOpen]);
+
   const handleAddToCart = () => {
-    if (!selectedSize) {
-      return;
-    }
+    if (!selectedSize) return;
     setIsPressed(true);
     onAddToCart(selectedSize);
     setTimeout(() => {
       setIsPressed(false);
       onClose();
       setSelectedSize('');
-    }, 1000);
+    }, 800);
   };
 
   if (!isOpen) return null;
 
   return createPortal(
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-70 z-[9999] flex items-center justify-center p-4" 
-      onClick={(e) => {
-        e.stopPropagation();
-        onClose();
-      }}
-    >
-      <div 
-        className="bg-white rounded-lg p-6 max-w-sm w-full" 
-        onClick={(e) => e.stopPropagation()}
+    <AnimatePresence>
+      <motion.div 
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
       >
-        <div className="text-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Select Size
-          </h3>
-          <p className="text-sm text-gray-600">{product?.name}</p>
-        </div>
+        <motion.div 
+          className="bg-white/95 backdrop-blur-2xl rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-gray-100/50" 
+          initial={{ opacity: 0, scale: 0.96, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 10 }}
+          transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="text-center mb-5">
+            <h3 className="text-base font-normal text-gray-900 mb-1 tracking-wide">
+              Select {isSneaker ? 'Shoe Size' : 'Size'}
+            </h3>
+            <p className="text-[13px] text-gray-400 line-clamp-1 font-light">{product?.name}</p>
+          </div>
 
-        <div className="grid grid-cols-5 gap-2 mb-6">
-          {sizes.map((size) => (
-            <button
-              key={size}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedSize(size);
-              }}
-              className={`py-2 px-3 border rounded-md text-sm font-medium transition-all transform ${
-                selectedSize === size
-                  ? 'border-black bg-black text-white shadow-lg scale-95'
-                  : 'border-gray-300 text-gray-700 hover:border-gray-400 shadow-md hover:shadow-lg hover:scale-105 active:scale-95'
-              }`}
-              style={{
-                boxShadow:
+          <div className={`grid ${isSneaker ? 'grid-cols-4' : 'grid-cols-5'} gap-2 mb-6`}>
+            {sizes.map((size) => (
+              <button
+                key={size}
+                onClick={(e) => { e.stopPropagation(); setSelectedSize(size); }}
+                className={`py-2.5 px-2 border rounded-xl text-[13px] font-light transition-all duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] ${
                   selectedSize === size
-                    ? 'inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.2)'
-                    : '0 2px 4px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.05)',
-              }}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
+                    ? 'border-gray-900 bg-gray-900 text-white shadow-sm'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50'
+                }`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddToCart();
-            }}
-            disabled={!selectedSize || isPressed}
-            className={`flex-1 py-2 px-4 rounded-md transition-all duration-200 ${
-              isPressed
-                ? 'bg-white text-black border border-black scale-95 shadow-inner'
-                : selectedSize
-                ? 'bg-black text-white hover:bg-gray-800'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            {isPressed ? 'Added!' : 'Add to Cart'}
-          </button>
-        </div>
-      </div>
-    </div>,
+          {isSneaker && (
+            <p className="text-xs text-gray-400 text-center mb-4">
+              Sizes shown in UK standard. Refer to the size guide for conversions.
+            </p>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={(e) => { e.stopPropagation(); onClose(); }}
+              className="flex-1 py-2.5 px-4 border border-gray-200 text-gray-500 rounded-xl font-light hover:bg-gray-50 transition-all duration-300 text-[13px] tracking-wide"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleAddToCart(); }}
+              disabled={!selectedSize || isPressed}
+              className={`flex-1 py-2.5 px-4 rounded-xl text-[13px] font-light tracking-wide transition-all duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] ${
+                isPressed
+                  ? 'bg-gray-900 text-white scale-[0.97]'
+                  : selectedSize
+                  ? 'bg-gray-900 text-white hover:bg-gray-700 active:scale-[0.97]'
+                  : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+              }`}
+            >
+              {isPressed ? '✓ Added!' : 'Add to Cart'}
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>,
     document.body
   );
 }

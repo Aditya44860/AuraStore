@@ -1,6 +1,6 @@
-import { useRef, Suspense, useEffect } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useGLTF, Environment, ContactShadows, Center } from '@react-three/drei'
+import { useRef, Suspense, useEffect, useState } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { useGLTF, Environment, ContactShadows, Center, OrbitControls } from '@react-three/drei'
 
 /*
   Uses the Khronos MaterialsVariantsShoe model —
@@ -10,7 +10,7 @@ import { useGLTF, Environment, ContactShadows, Center } from '@react-three/drei'
 
 const SHOE_URL = '/shoe.glb'
 
-function ShoeModel({ scrollProgress }) {
+function ShoeModel({ scrollProgress, setHovered }) {
   const groupRef = useRef()
   const { scene } = useGLTF(SHOE_URL)
 
@@ -28,6 +28,8 @@ function ShoeModel({ scrollProgress }) {
     if (groupRef.current) {
       // 360° rotation driven by scroll
       const targetRotation = scrollProgress.current * Math.PI * 2
+      // Only apply scroll rotation if not being manually rotated might be tricky
+      // But we can let them both influence the scene.
       groupRef.current.rotation.y += (targetRotation - groupRef.current.rotation.y) * 0.1
       // Subtle idle float
       groupRef.current.position.y = 0.3 + Math.sin(Date.now() * 0.0008) * 0.03
@@ -36,7 +38,12 @@ function ShoeModel({ scrollProgress }) {
 
   return (
     <Center>
-      <group ref={groupRef} rotation={[0.55, 0, -0.55]}>
+      <group 
+        ref={groupRef} 
+        rotation={[0.55, 0, -0.55]}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      >
         <primitive object={scene} scale={6.5} />
       </group>
     </Center>
@@ -45,7 +52,7 @@ function ShoeModel({ scrollProgress }) {
 
 useGLTF.preload(SHOE_URL)
 
-function Scene({ scrollProgress }) {
+function Scene({ scrollProgress, setHovered }) {
   return (
     <>
       {/* Studio Lighting Setup */}
@@ -70,8 +77,16 @@ function Scene({ scrollProgress }) {
       {/* Accent spotlight from below */}
       <pointLight position={[0, -2, 2]} intensity={0.2} color="#f0f0ff" />
 
+      {/* Manual Rotation Controls */}
+      <OrbitControls 
+        enableZoom={false} 
+        enablePan={false} 
+        autoRotate={false}
+        makeDefault
+      />
+
       {/* Shoe */}
-      <ShoeModel scrollProgress={scrollProgress} />
+      <ShoeModel scrollProgress={scrollProgress} setHovered={setHovered} />
 
       {/* Ground shadow */}
       <ContactShadows
@@ -90,8 +105,10 @@ function Scene({ scrollProgress }) {
 }
 
 export default function Shoe3DScene({ scrollProgress }) {
+  const [hovered, setHovered] = useState(false)
+
   return (
-    <div className="w-full h-full">
+    <div className={`w-full h-full ${hovered ? 'cursor-grab active:cursor-grabbing' : ''}`}>
       <Canvas
         camera={{ position: [0, 1, 4], fov: 30 }}
         dpr={[1, 2]}
@@ -100,7 +117,7 @@ export default function Shoe3DScene({ scrollProgress }) {
         style={{ background: 'transparent' }}
       >
         <Suspense fallback={null}>
-          <Scene scrollProgress={scrollProgress} />
+          <Scene scrollProgress={scrollProgress} setHovered={setHovered} />
         </Suspense>
       </Canvas>
     </div>

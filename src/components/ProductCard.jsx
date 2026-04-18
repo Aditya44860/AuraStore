@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '../context/CartContext'
 import SizeModal from './SizeModal'
 
@@ -9,6 +10,7 @@ function ProductCard({ id, name, price, originalPrice, image, gallery = [], cate
   const [isWishlisted, setIsWishlisted] = useState(() => isInWishlist(id))
   const [showSizeModal, setShowSizeModal] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
+  const [isBursting, setIsBursting] = useState(false)
 
   const isOnSale = originalPrice && originalPrice > price
   const discount = isOnSale ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
@@ -21,9 +23,13 @@ function ProductCard({ id, name, price, originalPrice, image, gallery = [], cate
       setIsWishlisted(false)
     } else {
       setIsWishlisted(true)
+      setIsBursting(true)
+      setTimeout(() => setIsBursting(false), 800)
+      
       addToWishlist({ id, name, price, originalPrice, imageUrl: image, category }).then(success => {
         if (success === false) {
           setIsWishlisted(false)
+          setIsBursting(false)
         }
       })
     }
@@ -48,17 +54,41 @@ function ProductCard({ id, name, price, originalPrice, image, gallery = [], cate
           e.stopPropagation()
           toggleWishlist()
         }}
-        className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white rounded-full shadow-sm transition-all duration-300"
+        className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white rounded-full shadow-sm transition-all duration-300 overflow-visible"
       >
-        <svg
-          className={`w-4 h-4 transition-all duration-400 ${isWishlisted ? 'scale-110' : 'scale-100'}`}
-          fill={isWishlisted ? "#1a1a1a" : "none"}
-          stroke={isWishlisted ? "#1a1a1a" : "#9ca3af"}
-          strokeWidth={1.5}
-          viewBox="0 0 24 24"
+        <AnimatePresence>
+          {isBursting && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <motion.div
+                initial={{ scale: 0, opacity: 0.5 }}
+                animate={{ scale: 1.8, opacity: 0 }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0 bg-white rounded-full shadow-[0_0_30px_white]"
+              />
+            </div>
+          )}
+        </AnimatePresence>
+
+        <motion.div
+          animate={isWishlisted ? {
+            filter: [
+              "drop-shadow(0 0 2px white)",
+              "drop-shadow(0 0 8px white)",
+              "drop-shadow(0 0 2px white)"
+            ]
+          } : { filter: "none" }}
+          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
+          <svg
+            className={`w-4 h-4 transition-all duration-400 ${isWishlisted ? 'scale-110' : 'scale-100'}`}
+            fill={isWishlisted ? "#1a1a1a" : "none"}
+            stroke={isWishlisted ? "#1a1a1a" : "#9ca3af"}
+            strokeWidth={1.5}
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+        </motion.div>
       </button>
       <div
         className="relative w-full bg-gray-50 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory hide-scrollbar aspect-[3/4]"

@@ -8,17 +8,7 @@ function Wishlist() {
   const { isLoggedIn, loading: authLoading } = useAuth();
 
   return (
-    <div
-      style={{
-        backgroundImage: "url(/website_background.png)",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-        minHeight: "100vh",
-        position: "relative",
-      }}
-    >
-      <div className="absolute inset-0 bg-white/50 h-full"></div>
+    <div className="min-h-screen bg-transparent">
       <div className="relative z-10 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">My Wishlist</h1>

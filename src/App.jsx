@@ -13,11 +13,20 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import ProductPage from './pages/ProductPage'
 import SearchResults from './pages/SearchResults'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { useLocation, createBrowserRouter, RouterProvider } from 'react-router-dom'
+import BnwBackground from './components/BnwBackground'
 
-const PageWrapper = ({ children }) => (
-  <div className="pt-16 sm:pt-20">{children}</div>
-)
+const PageWrapper = ({ children }) => {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+  
+  return (
+    <div className="pt-16 sm:pt-20">
+      {!isHome && <BnwBackground />}
+      {children}
+    </div>
+  );
+}
 
 const router = createBrowserRouter([
   { path: '/', element: <><Navbar /><PageWrapper><Home /></PageWrapper></> },

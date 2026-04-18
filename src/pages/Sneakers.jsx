@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
 import ClothingLoader from '../components/ClothingLoader'
+import SortDropdown from '../components/SortDropdown'
 
 function Sneakers() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [sortBy, setSortBy] = useState('latest')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'latest')
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'))
   const [totalPages, setTotalPages] = useState(1)
   const itemsPerPage = 9
 
@@ -37,27 +40,27 @@ function Sneakers() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [currentPage])
 
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (sortBy !== 'latest') params.set('sort', sortBy)
+    if (currentPage !== 1) params.set('page', currentPage.toString())
+    setSearchParams(params, { replace: true })
+  }, [sortBy, currentPage, setSearchParams])
+
   return (
-    <div className="relative min-h-screen bg-[#fafafa]">
+    <div className="relative min-h-screen bg-transparent">
       <div className="relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
           <div className="text-center mb-10 sm:mb-14">
             <h1 className="text-2xl sm:text-3xl lg:text-[2.5rem] font-extralight text-gray-900 mb-2 sm:mb-3 tracking-tight">Sneakers</h1>
-            <p className="text-gray-400 text-sm sm:text-[15px] font-light">Step Up Your Game</p>
+            <p className="text-gray-500 text-sm sm:text-[15px] font-medium">Step Up Your Game</p>
           </div>
 
           <div className="flex justify-end mb-6">
-            <div className="relative" style={{width: '85px'}}>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="appearance-none w-full pl-2 pr-6 py-1.5 text-[11px] font-light border border-gray-200 bg-white text-transparent rounded-full hover:bg-gray-50 cursor-pointer focus:outline-none focus:ring-1 focus:ring-gray-300">
-                <option value="latest">Latest</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-              </select>
-              <div className="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
-                <span className="text-[11px] font-light text-gray-500">Sort By</span>
-                <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" /></svg>
-              </div>
-            </div>
+            <SortDropdown 
+              currentOption={sortBy} 
+              onSelect={(value) => setSortBy(value)} 
+            />
           </div>
 
           {loading && products.length === 0 ? (
@@ -75,7 +78,7 @@ function Sneakers() {
           {!loading && totalPages > 1 && (
             <div className="flex justify-center items-center gap-2 mt-10">
               <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-5 py-2.5 rounded-full bg-white border border-gray-200 text-[12px] font-light tracking-wide hover:border-gray-400 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 text-gray-500">Previous</button>
-              <span className="px-4 py-2 text-[12px] font-light text-gray-400">Page {currentPage} of {totalPages}</span>
+              <span className="px-4 py-2 text-[12px] font-medium text-gray-700">Page {currentPage} of {totalPages}</span>
               <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-5 py-2.5 rounded-full bg-white border border-gray-200 text-[12px] font-light tracking-wide hover:border-gray-400 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 text-gray-500">Next</button>
             </div>
           )}

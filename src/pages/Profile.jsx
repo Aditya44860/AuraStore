@@ -326,8 +326,8 @@ function AddressModal({ onClose, onSuccess }) {
             {formData.type === 'OTHER' && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Custom Label (e.g. Parent's House)</label>
-                <input required type="text" value={formData.otherLabel} onChange={e => setFormData(prev => ({ ...prev, otherLabel: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-100 rounded-2xl text-sm bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-gray-900 transition-all outline-none" placeholder="Enter custom name" />
+                <input required type="text" value={formData.otherLabel} onChange={e => setFormData(prev => ({ ...prev, otherLabel: e.target.value.slice(0, 17) }))}
+                  className="w-full px-4 py-3 border border-gray-100 rounded-2xl text-sm bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-gray-900 transition-all outline-none" placeholder="Enter custom name" maxLength={17} />
               </motion.div>
             )}
           </div>
@@ -525,7 +525,7 @@ function Profile() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-transparent">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Profile Header */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 mb-6">
@@ -815,7 +815,7 @@ function Profile() {
                                             <p className="text-[9px] uppercase tracking-widest text-white/50 mb-1">Delivery Address</p>
                                             <p className="text-[11px] font-medium leading-relaxed">
                                               {order.shippingAddress?.fullName}<br />
-                                              {order.shippingAddress?.line1}, {order.shippingAddress?.city}<br />
+                                              {[order.shippingAddress?.line1, order.shippingAddress?.city].filter(Boolean).join(', ')}<br />
                                               {order.shippingAddress?.postalCode}
                                             </p>
                                           </div>
@@ -921,7 +921,7 @@ function Profile() {
                           </div>
                           <p className="text-sm font-bold text-gray-900 leading-tight">{addr.line1}</p>
                           {addr.line2 && <p className="text-xs text-gray-500 mt-0.5">{addr.line2}</p>}
-                          <p className="text-xs text-gray-500 mt-0.5">{addr.city}, {addr.state} {addr.postalCode}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{[addr.city, addr.state].filter(Boolean).join(', ')} {addr.postalCode}</p>
                         </div>
                         <button 
                           onClick={() => deleteAddress(addr.id)}

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import ScrollingBrands from "../components/ScrollingBrands";
 import Shoe3DScene from "../components/Shoe3D";
+import ReviewsMarquee from "../components/ReviewsMarquee";
 
 /* ── Scroll-reveal word component ── */
 function RevealWord({ children, progress, range }) {
@@ -228,7 +229,7 @@ function Home() {
             transition={{ duration: 1, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="mb-8"
           >
-            <span className="inline-block text-white/50 uppercase tracking-[0.4em] text-[10px] md:text-[11px] font-light border border-white/15 px-6 py-2.5 rounded-full backdrop-blur-sm">
+            <span className="inline-block text-white/75 uppercase tracking-[0.4em] text-[10px] md:text-[11px] font-light border border-white/25 px-6 py-2.5 rounded-full backdrop-blur-sm">
               Spring / Summer 2026
             </span>
           </motion.div>
@@ -247,7 +248,7 @@ function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 1.3, ease: "easeOut" }}
-            className="text-white/40 text-sm md:text-[15px] font-light tracking-wide max-w-sm mb-14 leading-relaxed"
+            className="text-white/65 text-sm md:text-[15px] font-light tracking-wide max-w-sm mb-14 leading-relaxed"
           >
             Premium streetwear designed for those who define their own standard.
           </motion.p>
@@ -277,7 +278,7 @@ function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 2.5 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-white/30"
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-white/50"
         >
           <span className="text-[9px] uppercase tracking-[0.35em] font-light">Scroll</span>
           <div className="w-[1px] h-14 bg-white/10 relative overflow-hidden">
@@ -293,21 +294,32 @@ function Home() {
       {/* ═══════════════════════════════════════
           2. ETHOS MARQUEE
           ═══════════════════════════════════════ */}
-      <div className="bg-[#0a0a0a] py-5 overflow-hidden relative">
+      <div className="bg-[#0a0a0a] py-6 overflow-hidden relative">
         <div className="flex whitespace-nowrap animate-[marquee_30s_linear_infinite]">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="flex items-center px-6 md:px-10">
-              <span className="text-white/20 text-[10px] sm:text-[11px] uppercase tracking-[0.3em] font-light">Define your space</span>
-              <span className="mx-6 md:mx-10 text-white/10 text-[8px]">◆</span>
-              <span className="text-white/20 text-[10px] sm:text-[11px] uppercase tracking-[0.3em] font-light">Uncompromising Quality</span>
-              <span className="mx-6 md:mx-10 text-white/10 text-[8px]">◆</span>
-              <span className="text-white/20 text-[10px] sm:text-[11px] uppercase tracking-[0.3em] font-light">Modern Aesthetics</span>
-              <span className="mx-6 md:mx-10 text-white/10 text-[8px]">◆</span>
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="flex items-center">
+              <span className="marquee-text text-white/80 text-[11px] sm:text-[12px] uppercase tracking-[0.35em] font-light">
+                Define your space
+              </span>
+              <span className="mx-12 text-white/10 text-[8px]">◆</span>
+              <span className="marquee-text text-white/80 text-[11px] sm:text-[12px] uppercase tracking-[0.35em] font-light">
+                Uncompromising Quality
+              </span>
+              <span className="mx-12 text-white/10 text-[8px]">◆</span>
+              <span className="marquee-text text-white/80 text-[11px] sm:text-[12px] uppercase tracking-[0.35em] font-light">
+                Modern Aesthetics
+              </span>
+              <span className="mx-12 text-white/10 text-[8px]">◆</span>
             </div>
           ))}
         </div>
       </div>
-      <style>{`@keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }`}</style>
+      <style>{`
+        @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
+        .marquee-text {
+          text-shadow: 0 0 15px rgba(255, 255, 255, 0.9), 0 0 30px rgba(255, 255, 255, 0.4);
+        }
+      `}</style>
 
       {/* ═══════════════════════════════════════
           3. HORIZONTAL BANNER — New Arrivals
@@ -376,9 +388,9 @@ function Home() {
               </p>
               <div className="space-y-6">
                 {[
-                  { num: "01", title: "Premium Materials", desc: "Sourced from the world's finest mills" },
-                  { num: "02", title: "Enduring Design", desc: "Built to outlast trends, not follow them" },
-                  { num: "03", title: "Perfect Craft", desc: "Obsessive attention to every single detail" },
+                  { title: "Premium Materials", desc: "Sourced from the world's finest mills" },
+                  { title: "Enduring Design", desc: "Built to outlast trends, not follow them" },
+                  { title: "Perfect Craft", desc: "Obsessive attention to every single detail" },
                 ].map((item, i) => (
                   <motion.div
                     key={i}
@@ -386,11 +398,11 @@ function Home() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.3 + i * 0.12 }}
-                    className="flex items-start gap-4"
+                    className="flex items-start gap-5"
                   >
-                    <span className="text-[11px] text-gray-300 font-light mt-0.5 tracking-wider">{item.num}</span>
+                    <span className="text-[10px] text-gray-900 mt-1 flex-shrink-0">◆</span>
                     <div>
-                      <span className="text-[13px] text-gray-800 font-normal tracking-wide block mb-0.5">{item.title}</span>
+                      <span className="text-[14px] text-gray-900 font-normal tracking-wide block mb-0.5">{item.title}</span>
                       <span className="text-[12px] text-gray-400 font-light tracking-wide">{item.desc}</span>
                     </div>
                   </motion.div>
@@ -443,7 +455,7 @@ function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-white/30 text-sm sm:text-[15px] font-light max-w-md leading-relaxed"
+            className="text-white/60 text-sm sm:text-[15px] font-light max-w-md leading-relaxed"
           >
             Every stitch. Every fabric. Every detail — obsessively considered.
           </motion.p>
@@ -552,7 +564,14 @@ function Home() {
       </section>
 
       {/* ═══════════════════════════════════════
-          9. COLLECTIONS — Category Grid
+          9. REVIEWS BELT
+          ═══════════════════════════════════════ */}
+      <section className="py-20 sm:py-32 bg-white">
+        <ReviewsMarquee />
+      </section>
+
+      {/* ═══════════════════════════════════════
+          10. COLLECTIONS — Category Grid
           ═══════════════════════════════════════ */}
       <section className="py-28 sm:py-36 px-4 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
         <motion.div
@@ -600,7 +619,7 @@ function Home() {
       </section>
 
       {/* ═══════════════════════════════════════
-          10. FEATURED IN
+          11. FEATURED IN
           ═══════════════════════════════════════ */}
       <section className="bg-white py-20 border-y border-gray-100/80 overflow-hidden">
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="max-w-[1400px] mx-auto px-4 text-center mb-10">
@@ -610,7 +629,7 @@ function Home() {
       </section>
 
       {/* ═══════════════════════════════════════
-          11. NEWSLETTER
+          12. NEWSLETTER
           ═══════════════════════════════════════ */}
       <section className="py-28 sm:py-36 px-4 bg-[#0a0a0a] text-white relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">

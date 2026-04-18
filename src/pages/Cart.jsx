@@ -9,16 +9,7 @@ function Cart() {
   const total = getCartTotal();
 
   return (
-    <div
-      style={{
-        backgroundImage: "url(/website_background.png)",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        minHeight: "100vh",
-        position: "relative",
-      }}
-    >
-      <div className="absolute inset-0 bg-white/50 h-full"></div>
+    <div className="min-h-screen bg-transparent">
       <div className="relative z-10 min-h-screen">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">

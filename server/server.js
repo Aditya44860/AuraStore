@@ -769,7 +769,10 @@ app.delete("/api/cart/:itemId", verifyToken, async (req, res) => {
 app.get("/api/addresses", verifyToken, async (req, res) => {
   try {
     const addresses = await prisma.address.findMany({
-      where: { userId: req.userId },
+      where: { 
+        userId: req.userId,
+        type: { in: ['HOME', 'WORK', 'OTHER'] }
+      },
       orderBy: { id: 'desc' }, // Get recent first
       take: 10
     });

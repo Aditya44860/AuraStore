@@ -25,7 +25,7 @@ function ScrollingBrands() {
             <img
               src={brand.logo}
               alt={brand.name}
-              className="max-h-full max-w-full object-contain opacity-40 grayscale filter hover:opacity-70 hover:grayscale-0 transition-all duration-700"
+              className="max-h-full max-w-full object-contain opacity-55 grayscale filter hover:opacity-80 hover:grayscale-0 transition-all duration-700"
             />
           </div>
         ))}

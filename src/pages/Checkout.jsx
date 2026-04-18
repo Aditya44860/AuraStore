@@ -185,6 +185,7 @@ function Checkout() {
   const handleShippingChange = useCallback((name, value) => {
     if (name === 'phone') value = value.replace(/\D/g, '').slice(0, 10);
     if (name === 'postalCode') value = value.replace(/\D/g, '').slice(0, 6);
+    if (name === 'otherLabel') value = value.slice(0, 17);
     setShipping(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   }, [errors]);
@@ -255,7 +256,7 @@ function Checkout() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-sm">
           <h2 className="text-xl font-bold text-gray-900 mb-2">Login Required</h2>
           <p className="text-gray-500 text-sm mb-6">Please login to proceed with checkout</p>
@@ -267,7 +268,7 @@ function Checkout() {
 
   if (isLoadingCart) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-900 border-t-transparent"></div>
       </div>
     );
@@ -275,7 +276,7 @@ function Checkout() {
 
   if (!orderComplete && cartItems.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <div className="text-center">
           <h2 className="text-xl font-bold text-gray-900 mb-2">Cart is Empty</h2>
           <p className="text-gray-500 text-sm mb-6">Add items to your cart before checkout</p>
@@ -287,7 +288,7 @@ function Checkout() {
 
   if (orderComplete && completedOrder) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
         <Confetti />
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-md w-full text-center relative z-10">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring', stiffness: 200 }} className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -302,7 +303,7 @@ function Checkout() {
             <div className="flex justify-between text-sm"><span className="text-gray-500">Est. Delivery</span><span className="text-gray-900 font-medium">{new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>
           </div>
           <div className="flex gap-3">
-            <Link to="/profile" className="flex-1 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-smooth text-center">View Orders</Link>
+            <Link to="/profile?view=orders" className="flex-1 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-smooth text-center">View Orders</Link>
             <Link to="/" className="flex-1 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-smooth text-center">Continue Shopping</Link>
           </div>
         </motion.div>
@@ -311,7 +312,7 @@ function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent">
       {/* Header */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -402,7 +403,7 @@ function Checkout() {
                                 </span>
                               </div>
                               <p className="text-[11px] font-bold text-gray-900 truncate mb-1">{addr.line1}</p>
-                              <p className="text-[10px] text-gray-500 truncate">{addr.city}, {addr.postalCode}</p>
+                              <p className="text-[10px] text-gray-500 truncate">{[addr.city, addr.postalCode].filter(Boolean).join(', ')}</p>
                             </button>
                           ))}
                         </div>
@@ -481,7 +482,7 @@ function Checkout() {
                       {shipping.type === 'OTHER' && (
                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="sm:col-span-2">
                           <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Custom Label (e.g. Parent's House)</label>
-                          <input required type="text" value={shipping.otherLabel} onChange={(e) => handleShippingChange('otherLabel', e.target.value)} placeholder="Enter custom name"
+                          <input required type="text" value={shipping.otherLabel} onChange={(e) => handleShippingChange('otherLabel', e.target.value)} placeholder="Enter custom name" maxLength={17}
                             className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-smooth" />
                         </motion.div>
                       )}
@@ -530,7 +531,7 @@ function Checkout() {
                       <div className="text-sm text-gray-600 space-y-1">
                         <p className="font-medium text-gray-900">{shipping.fullName}</p>
                         <p>{shipping.line1}{shipping.line2 ? `, ${shipping.line2}` : ''}</p>
-                        <p>{shipping.city}, {shipping.state} - {shipping.postalCode}</p>
+                        <p>{[shipping.city, shipping.state].filter(Boolean).join(', ')}{shipping.postalCode ? ` - ${shipping.postalCode}` : ''}</p>
                         <p>Phone: {shipping.phone}</p>
                       </div>
                       <button onClick={() => setCurrentStep(0)} className="text-xs text-gray-500 hover:text-gray-900 mt-2 underline">Edit</button>

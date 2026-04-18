@@ -164,10 +164,17 @@ function ProductPage() {
   const [reviewError, setReviewError] = useState('');
   const [sizeError, setSizeError] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [fullScreenIndex, setFullScreenIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
   const scrollRef = useRef(null);
 
-  // Lock body scroll on mount, restore on unmount
+  // Lock body scroll on desktop mount, restore on unmount
   useEffect(() => {
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) return;
+    
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
     return () => {
@@ -176,8 +183,12 @@ function ProductPage() {
   }, []);
 
   const handleScroll = (e) => {
-    const { scrollTop, clientHeight } = e.target;
-    const index = Math.round(scrollTop / clientHeight);
+    const { scrollTop, scrollLeft, clientHeight, clientWidth } = e.target;
+    const isMobile = window.innerWidth < 1024;
+    const index = isMobile 
+      ? Math.round(scrollLeft / clientWidth)
+      : Math.round(scrollTop / clientHeight);
+    
     if (index !== activeIndex) {
       setActiveIndex(index);
     }
@@ -185,9 +196,11 @@ function ProductPage() {
 
   const scrollToImage = (index) => {
     if (scrollRef.current) {
-      const { clientHeight } = scrollRef.current;
+      const isMobile = window.innerWidth < 1024;
+      const { clientHeight, clientWidth } = scrollRef.current;
       scrollRef.current.scrollTo({
-        top: index * clientHeight,
+        top: isMobile ? 0 : index * clientHeight,
+        left: isMobile ? index * clientWidth : 0,
         behavior: 'smooth'
       });
     }
@@ -321,12 +334,12 @@ function ProductPage() {
   const highlights = getKeyHighlights(product);
 
   return (
-    <div className="h-[calc(100vh-80px)] overflow-hidden bg-gray-50/50">
-      <div className="flex h-full">
-        {/* Left Column: Fixed Image Gallery with Independent Scroll */}
-        <div className="w-1/2 h-full border-r border-gray-100 flex flex-col p-6 lg:p-10 overflow-hidden relative">
+    <div className="lg:h-[calc(100vh-80px)] lg:overflow-hidden bg-gray-50/50">
+      <div className="flex flex-col lg:flex-row h-full">
+        {/* Gallery Column */}
+        <div className="w-full lg:w-1/2 h-auto lg:h-full border-b lg:border-r border-gray-100 flex flex-col p-0 lg:p-10 overflow-hidden relative bg-white lg:bg-transparent">
           {/* Breadcrumb - Locked to Left Panel */}
-          <nav className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-gray-400 mb-6 shrink-0">
+          <nav className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-gray-400 p-4 lg:p-0 mb-2 lg:mb-6 shrink-0">
             <Link to="/" className="hover:text-gray-900 transition-colors">Home</Link>
             <span className="opacity-30">/</span>
             {product.category && (
@@ -341,42 +354,49 @@ function ProductPage() {
           </nav>
 
           {/* Premium Snap-Scroll Image Gallery Wrapper */}
-          <div className="relative group grow overflow-hidden">
+          <div className="relative group grow overflow-hidden cursor-pointer" onClick={() => setIsFullScreen(true)}>
             {/* Scrollable Gallery Container */}
             <motion.div
               ref={scrollRef}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8 }}
               onScroll={handleScroll}
-              className="w-full h-full overflow-y-auto snap-y snap-mandatory hide-scrollbar rounded-3xl border border-gray-200 bg-white"
+              className="w-full h-[110vw] lg:h-full overflow-x-auto lg:overflow-y-auto snap-x lg:snap-y snap-mandatory hide-scrollbar lg:rounded-3xl border-b lg:border border-gray-100 bg-white flex lg:block"
             >
               {[product.imageUrl, ...(product.gallery || [])].filter(Boolean).map((img, idx) => (
                 <motion.div 
                   key={idx} 
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.1 }}
-                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                  className="w-full h-full flex items-center justify-center snap-start overflow-hidden p-8"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true, amount: 0.5 }}
+                  transition={{ duration: 0.4 }}
+                  className="min-w-full w-full h-full flex items-center justify-center snap-start overflow-hidden p-0 shrink-0"
                 >
                   <img 
                     src={img} 
                     alt={`${product.name} angle ${idx + 1}`} 
-                    className="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-105" 
+                    className="w-full h-full object-cover mix-blend-multiply transition-transform duration-700 lg:group-hover:scale-110 scale-100" 
                   />
                 </motion.div>
               ))}
             </motion.div>
+          </div>
 
-            {/* Vertical Dots Navigation - Persistent Overlay */}
-            <div className="absolute right-8 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-4">
+          {/* Dots Navigation - Positioned Outside for better visibility */}
+          <div className="flex justify-center lg:block lg:absolute lg:right-4 lg:top-1/2 lg:-translate-y-1/2 py-4 lg:py-0 z-30">
+            <div className="flex flex-row lg:flex-col gap-3">
               {[product.imageUrl, ...(product.gallery || [])].filter(Boolean).map((_, idx) => (
                 <button 
                   key={idx}
-                  onClick={() => scrollToImage(idx)}
-                  className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                    activeIndex === idx ? 'bg-black scale-125' : 'bg-gray-300'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    scrollToImage(idx);
+                  }}
+                  className={`transition-all duration-300 cursor-pointer ${
+                    activeIndex === idx 
+                      ? 'w-6 lg:w-2 lg:h-6 bg-black rounded-full' 
+                      : 'w-2 lg:w-2 h-2 bg-gray-300 rounded-full'
                   }`}
                 />
               ))}
@@ -384,8 +404,8 @@ function ProductPage() {
           </div>
         </div>
 
-        {/* Right Column: Independently Scrollable Product Details */}
-        <div className="w-1/2 h-full overflow-y-auto hide-scrollbar p-6 lg:p-12 xl:p-20 bg-white">
+        {/* Details Column */}
+        <div className="w-full lg:w-1/2 h-auto lg:h-full overflow-y-auto hide-scrollbar p-6 sm:p-8 lg:p-12 xl:p-20 bg-white pb-32 lg:pb-20">
           <motion.div
             initial={{ opacity: 0, x: 20 }} 
             animate={{ opacity: 1, x: 0 }} 
@@ -682,7 +702,7 @@ function ProductPage() {
                 {reviews.length === 0 && !reviewStats?.totalReviews && (
                   <p className="text-sm text-gray-400 text-center py-6">No reviews yet. Be the first to review this product!</p>
                 )}
-                {reviews.map((review, index) => (
+                {(showAllReviews ? reviews : reviews.slice(0, 3)).map((review, index) => (
                   <motion.div
                     key={review.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -708,10 +728,190 @@ function ProductPage() {
                     </div>
                   </motion.div>
                 ))}
+
+                {reviews.length > 3 && (
+                  <button
+                    onClick={() => setShowAllReviews(!showAllReviews)}
+                    className="w-full py-3 text-sm font-semibold text-gray-900 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    {showAllReviews ? 'Show Less' : `Show All Reviews (${reviews.length})`}
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>
         </div>
+      </div>
+
+      {/* Full-Screen Gallery Modal */}
+      <AnimatePresence>
+        {isFullScreen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-white flex flex-col lg:flex-row overflow-hidden"
+          >
+            {/* Mobile/Tablet Header with Close */}
+            <div className="lg:hidden absolute top-0 left-0 right-0 p-4 flex justify-end z-[110]">
+              <button 
+                onClick={() => setIsFullScreen(false)}
+                className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Sidebar Thumbnails (Desktop-first approach, shown on left as cards) */}
+            <div className="hidden lg:flex w-24 xl:w-32 bg-gray-50/50 border-r border-gray-100 flex-col gap-4 p-4 overflow-y-auto hide-scrollbar shrink-0">
+              {[product.imageUrl, ...(product.gallery || [])].filter(Boolean).map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setDirection(idx > fullScreenIndex ? 1 : -1);
+                    setFullScreenIndex(idx);
+                  }}
+                  className={`relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer ${
+                    fullScreenIndex === idx ? 'border-black scale-105 shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+
+            {/* Main Full-Screen Display */}
+            <div className="flex-1 relative bg-white flex items-center justify-center p-8">
+              {/* Desktop Close Button */}
+              <button 
+                onClick={() => setIsFullScreen(false)}
+                className="hidden lg:flex absolute top-8 right-8 p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-all duration-300 z-[120] group cursor-pointer"
+              >
+                <svg className="w-6 h-6 text-gray-900 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+                <motion.div
+                  key={fullScreenIndex}
+                  custom={direction}
+                  variants={{
+                    enter: (direction) => ({
+                      x: direction > 0 ? 1000 : -1000,
+                      opacity: 0,
+                      scale: 0.8
+                    }),
+                    center: {
+                      zIndex: 1,
+                      x: 0,
+                      opacity: 1,
+                      scale: 1
+                    },
+                    exit: (direction) => ({
+                      zIndex: 0,
+                      x: direction < 0 ? 1000 : -1000,
+                      opacity: 0,
+                      scale: 1.2
+                    })
+                  }}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.3 }
+                  }}
+                  className="w-full h-full flex items-center justify-center max-w-5xl"
+                >
+                  <img 
+                    src={[product.imageUrl, ...(product.gallery || [])].filter(Boolean)[fullScreenIndex]} 
+                    alt="" 
+                    className="max-w-full max-h-full object-contain mix-blend-multiply"
+                  />
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Navigation Arrows (Desktop) */}
+              <div className="hidden lg:flex absolute inset-x-8 top-1/2 -translate-y-1/2 justify-between pointer-events-none z-[120]">
+                <button 
+                  disabled={fullScreenIndex === 0}
+                  onClick={() => {
+                    setDirection(-1);
+                    setFullScreenIndex(prev => prev - 1);
+                  }}
+                  className={`pointer-events-auto p-4 rounded-full bg-gray-100/50 hover:bg-white border border-gray-100 transition-all duration-300 cursor-pointer ${fullScreenIndex === 0 ? 'opacity-0 invisible' : 'opacity-100'}`}
+                >
+                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button 
+                  disabled={fullScreenIndex === [product.imageUrl, ...(product.gallery || [])].filter(Boolean).length - 1}
+                  onClick={() => {
+                    setDirection(1);
+                    setFullScreenIndex(prev => prev + 1);
+                  }}
+                  className={`pointer-events-auto p-4 rounded-full bg-gray-100/50 hover:bg-white border border-gray-100 transition-all duration-300 cursor-pointer ${fullScreenIndex === [product.imageUrl, ...(product.gallery || [])].filter(Boolean).length - 1 ? 'opacity-0 invisible' : 'opacity-100'}`}
+                >
+                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Image Info / Counter + Mobile Nav */}
+              <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-8 z-[120]">
+                {/* Mobile Prev Arrow */}
+                <button 
+                  className={`lg:hidden p-2 active:scale-90 transition-all cursor-pointer ${fullScreenIndex === 0 ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDirection(-1);
+                    setFullScreenIndex(prev => prev - 1);
+                  }}
+                >
+                  <svg className="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                <div className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-gray-400 whitespace-nowrap">
+                  0{fullScreenIndex + 1} / 0{[product.imageUrl, ...(product.gallery || [])].filter(Boolean).length}
+                </div>
+
+                {/* Mobile Next Arrow */}
+                <button 
+                  className={`lg:hidden p-2 active:scale-90 transition-all cursor-pointer ${fullScreenIndex === [product.imageUrl, ...(product.gallery || [])].filter(Boolean).length - 1 ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDirection(1);
+                    setFullScreenIndex(prev => prev + 1);
+                  }}
+                >
+                  <svg className="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sticky Mobile CTA */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-gray-100 z-50 flex gap-3">
+        <button
+          onClick={handleAddToCart}
+          disabled={isPressed}
+          className={`flex-1 py-4 px-6 rounded-2xl font-bold text-[15px] transition-all duration-300 active:scale-95 ${
+            isPressed ? 'bg-green-500 text-white' : 'bg-black text-white'
+          }`}
+        >
+          {isPressed ? '✓ Added' : `Add to Cart • ₹${parseFloat(product.price)}`}
+        </button>
       </div>
 
       <style>{`
@@ -721,6 +921,8 @@ function ProductPage() {
           75% { transform: translateX(4px); }
         }
         .animate-shake { animation: shake 0.3s ease-in-out; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );

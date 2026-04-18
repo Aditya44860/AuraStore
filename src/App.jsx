@@ -13,6 +13,7 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import ProductPage from './pages/ProductPage'
 import SearchResults from './pages/SearchResults'
+import AdminPortal from './pages/AdminPortal'
 import { useLocation, createBrowserRouter, RouterProvider } from 'react-router-dom'
 import BnwBackground from './components/BnwBackground'
 
@@ -40,6 +41,7 @@ const router = createBrowserRouter([
   { path: '/product/:id', element: <><Navbar /><PageWrapper><ProductPage /></PageWrapper></> },
   { path: '/wishlist', element: <><Navbar /><PageWrapper><Wishlist /></PageWrapper></> },
   { path: '/cart', element: <><Navbar /><PageWrapper><Cart /></PageWrapper></> },
+  { path: '/admin_portal', element: <AdminPortal /> },
   { path: '/checkout', element: <Checkout /> },
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <Signup /> },

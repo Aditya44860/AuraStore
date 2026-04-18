@@ -1056,6 +1056,204 @@ app.get("/api/orders/:id", verifyToken, async (req, res) => {
   }
 });
 
+// --------------------
+// ADMIN ENDPOINTS
+// --------------------
+
+// Get administrative statistics
+app.get("/api/admin/stats", async (req, res) => {
+  try {
+    const [totalUsers, totalOrders, totalProducts, allOrders] = await Promise.all([
+      prisma.user.count(),
+      prisma.order.count(),
+      prisma.product.count(),
+      prisma.order.findMany({ select: { total: true } })
+    ]);
+
+    const totalRevenue = allOrders.reduce((sum, order) => sum + parseFloat(order.total), 0);
+
+    // Get order distribution by status
+    const statusCounts = await prisma.order.groupBy({
+      by: ['status'],
+      _count: true
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        totalUsers,
+        totalOrders,
+        totalProducts,
+        totalRevenue,
+        statusDistribution: statusCounts
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching admin stats" });
+  }
+});
+
+// List all orders with user and status details
+app.get("/api/admin/orders", async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        user: { select: { fullName: true, email: true } },
+        items: { include: { product: { select: { name: true } } } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json({ success: true, orders });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching admin orders" });
+  }
+});
+
+// Update order status
+app.patch("/api/admin/orders/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: { status }
+    });
+    
+    res.json({ success: true, order: updatedOrder });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error updating order status" });
+  }
+});
+
+// List all products with stock and category info
+app.get("/api/admin/products", async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      include: {
+        category: { select: { name: true } }
+      },
+      orderBy: { updatedAt: 'desc' }
+    });
+    res.json({ success: true, products });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching admin inventory" });
+  }
+});
+
+// Delete a product (Soft delete or hard delete if no dependencies)
+app.delete("/api/admin/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check for existing order items
+    const linkedItems = await prisma.orderItem.count({ where: { productId: id } });
+    
+    if (linkedItems > 0) {
+      // If linked to orders, we just deactivate it
+      await prisma.product.update({
+        where: { id },
+        data: { isActive: false }
+      });
+      return res.json({ success: true, message: "Product deactivated (linked to existing orders)" });
+    }
+
+    await prisma.product.delete({ where: { id } });
+    res.json({ success: true, message: "Product deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error deleting product" });
+  }
+});
+
+// Get detailed revenue history (Last 14 days)
+app.get("/api/admin/revenue-history", async (req, res) => {
+  try {
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+    const orders = await prisma.order.findMany({
+      where: {
+        createdAt: { gte: fourteenDaysAgo },
+        status: { not: 'CANCELED' }
+      },
+      select: {
+        total: true,
+        createdAt: true
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    // Group by date
+    const historyMap = {};
+    for (let i = 0; i < 14; i++) {
+       const date = new Date();
+       date.setDate(date.getDate() - i);
+       const dateStr = date.toISOString().split('T')[0];
+       historyMap[dateStr] = 0;
+    }
+
+    orders.forEach(order => {
+      const dateStr = order.createdAt.toISOString().split('T')[0];
+      if (historyMap[dateStr] !== undefined) {
+        historyMap[dateStr] += parseFloat(order.total);
+      }
+    });
+
+    const history = Object.entries(historyMap)
+      .map(([date, revenue]) => ({ date, revenue }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    res.json({ success: true, history });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching revenue history" });
+  }
+});
+
+// Get detailed user list with spend data
+app.get("/api/admin/users-detailed", async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      include: {
+        orders: {
+          select: { total: true }
+        }
+      }
+    });
+
+    const detailedUsers = users.map(user => ({
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      orderCount: user.orders.length,
+      totalSpend: user.orders.reduce((sum, o) => sum + parseFloat(o.total), 0),
+      joinedAt: user.createdAt
+    }));
+
+    res.json({ success: true, users: detailedUsers });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching detailed users" });
+  }
+});
+
+// Delete a user
+app.delete("/api/admin/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(id);
+
+    // Safety: check for orders
+    const orderCount = await prisma.order.count({ where: { userId } });
+    if (orderCount > 0) {
+      return res.status(400).json({ success: false, message: "Cannot delete user with existing orders" });
+    }
+
+    await prisma.user.delete({ where: { id: userId } });
+    res.json({ success: true, message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error deleting user" });
+  }
+});
+
 // Get all users (for development/admin purposes)
 app.get("/api/users", async (req, res) => {
   try {

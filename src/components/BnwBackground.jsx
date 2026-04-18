@@ -45,11 +45,11 @@ const BnwBackground = () => {
       <div className="absolute top-[28%] left-14 flex flex-col gap-1.5 opacity-[0.6] font-mono text-[7px] select-none text-emerald-600">
         <span className="flex items-center gap-1.5">
           <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />
-          > STATUS: SYSTEM_OPTIMIZED
+          STATUS: SYSTEM_OPTIMIZED
         </span>
-        <span>> KERNEL_LOAD : 0x00FF41</span>
-        <span>> REA_RELEASE : v3.0.4 [STA]</span>
-        <span className="text-gray-400 opacity-60">> TRACE_ROUTE : COMPLETED</span>
+        <span> KERNEL_LOAD : 0x00FF41</span>
+        <span> REA_RELEASE : v3.0.4 [STA]</span>
+        <span className="text-gray-400 opacity-60"> TRACE_ROUTE : COMPLETED</span>
       </div>
 
       {/* 5. Isometric Circuitry & Axis */}

@@ -77,6 +77,11 @@ function ReviewsMarquee() {
   useEffect(() => {
     const fetchDiverseProducts = async () => {
       try {
+        const cached = localStorage.getItem('aura_marquee_cache');
+        if (cached) {
+          setItems(JSON.parse(cached));
+        }
+
         const catRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/categories`);
         const catData = await catRes.json();
         if (!catData.success) return;
@@ -146,7 +151,10 @@ function ReviewsMarquee() {
           };
         });
 
-        setItems(paired);
+        localStorage.setItem('aura_marquee_cache', JSON.stringify(paired));
+        if (!cached) {
+          setItems(paired);
+        }
       } catch (err) {
         console.error("Error fetching diverse products for marquee:", err);
       }

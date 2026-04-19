@@ -1268,6 +1268,417 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
+// =====================
+// ENHANCED ADMIN ENDPOINTS
+// =====================
+
+// Advanced analytics (KPIs + traffic simulation)
+app.get("/api/admin/analytics", async (req, res) => {
+  try {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const [totalUsers, todayOrders, weekOrders, monthOrders, activeUsersData, allOrders, totalProducts, statusCounts, paymentMethodsData, orderItemsData] = await Promise.all([
+      prisma.user.count(),
+      prisma.order.count({ where: { createdAt: { gte: todayStart } } }),
+      prisma.order.count({ where: { createdAt: { gte: weekAgo } } }),
+      prisma.order.count({ where: { createdAt: { gte: monthAgo } } }),
+      prisma.order.findMany({
+        where: { createdAt: { gte: monthAgo } },
+        select: { userId: true },
+        distinct: ['userId']
+      }),
+      prisma.order.findMany({ select: { total: true, createdAt: true } }),
+      prisma.product.count(),
+      prisma.order.groupBy({ by: ['status'], _count: true }),
+      prisma.payment.groupBy({ by: ['method'], _count: true, where: { status: 'SUCCESS' } }),
+      prisma.orderItem.findMany({ include: { product: true } })
+    ]);
+
+    const productSales = {};
+    orderItemsData.forEach(item => {
+      if (!item.product) return;
+      if (!productSales[item.productId]) {
+        productSales[item.productId] = { name: item.product.name, revenue: 0, sold: 0 };
+      }
+      productSales[item.productId].revenue += parseFloat(item.price) * item.quantity;
+      productSales[item.productId].sold += item.quantity;
+    });
+    const topProducts = Object.values(productSales).sort((a,b) => b.revenue - a.revenue).slice(0, 5);
+
+    const totalRevenue = allOrders.reduce((sum, o) => sum + parseFloat(o.total), 0);
+    const activeUsers = activeUsersData.length;
+    const conversionRate = totalUsers > 0 ? ((activeUsers / totalUsers) * 100) : 0;
+
+    // Generate 30-day traffic trend based on STRICTLY REAL data
+    const [recentOrdersList, recentUsersList] = await Promise.all([
+      prisma.order.findMany({
+        where: { createdAt: { gte: monthAgo } },
+        select: { createdAt: true }
+      }),
+      prisma.user.findMany({
+        where: { createdAt: { gte: monthAgo } },
+        select: { createdAt: true }
+      })
+    ]);
+
+    const dataByDate = {};
+    recentOrdersList.forEach(o => {
+      const d = o.createdAt.toISOString().split('T')[0];
+      if (!dataByDate[d]) dataByDate[d] = { orders: 0, newUsers: 0 };
+      dataByDate[d].orders++;
+    });
+    recentUsersList.forEach(u => {
+      const d = u.createdAt.toISOString().split('T')[0];
+      if (!dataByDate[d]) dataByDate[d] = { orders: 0, newUsers: 0 };
+      dataByDate[d].newUsers++;
+    });
+
+    const traffic = [];
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const dateStr = date.toISOString().split('T')[0];
+      const stats = dataByDate[dateStr] || { orders: 0, newUsers: 0 };
+      
+      // Calculate real estimated visitors based on actual DB events
+      // E.g., 1 order ≈ 5 visits, 1 signup ≈ 3 visits, + baseline 1 active visit per total current users mapped to hour
+      const totalBaseline = Math.floor(activeUsers * 0.1); // ~10% active daily
+      const visitors = Math.round(totalBaseline + (stats.orders * 5) + (stats.newUsers * 3));
+      
+      traffic.push({ date: dateStr, visitors: Math.max(visitors, 1), orders: stats.orders, newUsers: stats.newUsers });
+    }
+
+    res.json({
+      success: true,
+      analytics: {
+        totalRevenue, totalUsers, totalProducts,
+        totalOrders: allOrders.length,
+        todayOrders, weekOrders, monthOrders,
+        activeUsers,
+        conversionRate: parseFloat(conversionRate.toFixed(1)),
+        statusDistribution: statusCounts,
+        paymentMethods: paymentMethodsData,
+        topProducts,
+        traffic
+      }
+    });
+  } catch (error) {
+    console.error('Analytics error:', error);
+    res.status(500).json({ success: false, message: "Error fetching analytics" });
+  }
+});
+
+// Category-wise sales (pie chart)
+app.get("/api/admin/analytics/category-sales", async (req, res) => {
+  try {
+    const orderItems = await prisma.orderItem.findMany({
+      include: {
+        product: { include: { category: true } }
+      }
+    });
+
+    const categorySales = {};
+    orderItems.forEach(item => {
+      const catName = item.product.category?.name || 'Uncategorized';
+      const subCatName = item.product.subcategory || 'Other';
+      
+      if (!categorySales[catName]) {
+        categorySales[catName] = { category: catName, revenue: 0, orders: 0, subcategories: {} };
+      }
+      const itemRev = parseFloat(item.price) * item.quantity;
+      
+      categorySales[catName].revenue += itemRev;
+      categorySales[catName].orders += item.quantity;
+      
+      if (!categorySales[catName].subcategories[subCatName]) {
+        categorySales[catName].subcategories[subCatName] = { name: subCatName, revenue: 0, orders: 0 };
+      }
+      categorySales[catName].subcategories[subCatName].revenue += itemRev;
+      categorySales[catName].subcategories[subCatName].orders += item.quantity;
+    });
+
+    const data = Object.values(categorySales).map(c => ({
+      ...c,
+      subcategories: Object.values(c.subcategories).sort((a, b) => b.revenue - a.revenue)
+    })).sort((a, b) => b.revenue - a.revenue);
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Category sales error:', error);
+    res.status(500).json({ success: false, message: "Error fetching category sales" });
+  }
+});
+
+// Monthly revenue (bar chart — 12 months)
+app.get("/api/admin/analytics/monthly-revenue", async (req, res) => {
+  try {
+    const now = new Date();
+    const months = [];
+    for (let i = 11; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+      months.push({ start, end, label: start.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }) });
+    }
+
+    const results = await Promise.all(
+      months.map(async (m) => {
+        const orders = await prisma.order.findMany({
+          where: { createdAt: { gte: m.start, lte: m.end }, status: { not: 'CANCELED' } },
+          select: { total: true }
+        });
+        return {
+          month: m.label,
+          revenue: orders.reduce((sum, o) => sum + parseFloat(o.total), 0),
+          orders: orders.length
+        };
+      })
+    );
+
+    res.json({ success: true, data: results });
+  } catch (error) {
+    console.error('Monthly revenue error:', error);
+    res.status(500).json({ success: false, message: "Error fetching monthly revenue" });
+  }
+});
+
+// State-wise geo data (India map heatmap)
+app.get("/api/admin/analytics/geo", async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: { shippingAddressId: { not: null } },
+      include: { shippingAddress: { select: { state: true, city: true } } }
+    });
+
+    const stateData = {};
+    orders.forEach(order => {
+      const state = order.shippingAddress?.state || 'Unknown';
+      if (state === 'Unknown') return;
+      if (!stateData[state]) stateData[state] = { state, orders: 0, revenue: 0 };
+      stateData[state].orders++;
+      stateData[state].revenue += parseFloat(order.total);
+    });
+
+    res.json({ success: true, data: Object.values(stateData) });
+  } catch (error) {
+    console.error('Geo data error:', error);
+    res.status(500).json({ success: false, message: "Error fetching geo data" });
+  }
+});
+
+// Create product
+app.post("/api/admin/products", async (req, res) => {
+  try {
+    const { name, description, price, originalPrice, stock, imageUrl, gallery, subcategory, categoryId, isOnSale } = req.body;
+    const product = await prisma.product.create({
+      data: {
+        name,
+        description: description || null,
+        price: parseFloat(price),
+        originalPrice: originalPrice ? parseFloat(originalPrice) : null,
+        stock: parseInt(stock) || 0,
+        imageUrl: imageUrl || null,
+        gallery: gallery || [],
+        subcategory: subcategory || null,
+        categoryId: categoryId || null,
+        isOnSale: isOnSale || false,
+      },
+      include: { category: true }
+    });
+    res.status(201).json({ success: true, product });
+  } catch (error) {
+    console.error('Create product error:', error);
+    res.status(500).json({ success: false, message: "Error creating product" });
+  }
+});
+
+// Update product
+app.put("/api/admin/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, originalPrice, stock, imageUrl, gallery, subcategory, categoryId, isOnSale, isActive } = req.body;
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (price !== undefined) updateData.price = parseFloat(price);
+    if (originalPrice !== undefined) updateData.originalPrice = originalPrice ? parseFloat(originalPrice) : null;
+    if (stock !== undefined) updateData.stock = parseInt(stock);
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (gallery !== undefined) updateData.gallery = gallery;
+    if (subcategory !== undefined) updateData.subcategory = subcategory;
+    if (categoryId !== undefined) updateData.categoryId = categoryId;
+    if (isOnSale !== undefined) updateData.isOnSale = isOnSale;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    const product = await prisma.product.update({
+      where: { id },
+      data: updateData,
+      include: { category: true }
+    });
+    res.json({ success: true, product });
+  } catch (error) {
+    console.error('Update product error:', error);
+    res.status(500).json({ success: false, message: "Error updating product" });
+  }
+});
+
+// Bulk product actions
+app.patch("/api/admin/products/bulk", async (req, res) => {
+  try {
+    const { action, productIds, data } = req.body;
+    if (action === 'delete') {
+      for (const id of productIds) {
+        const linked = await prisma.orderItem.count({ where: { productId: id } });
+        if (linked > 0) {
+          await prisma.product.update({ where: { id }, data: { isActive: false } });
+        } else {
+          // Clean up related records first
+          await prisma.favouriteItems.deleteMany({ where: { productId: id } });
+          await prisma.cartItem.deleteMany({ where: { productId: id } });
+          await prisma.review.deleteMany({ where: { productId: id } });
+          await prisma.product.delete({ where: { id } });
+        }
+      }
+    } else if (action === 'update-stock') {
+      await prisma.product.updateMany({
+        where: { id: { in: productIds } },
+        data: { stock: parseInt(data.stock) }
+      });
+    } else if (action === 'toggle-sale') {
+      await prisma.product.updateMany({
+        where: { id: { in: productIds } },
+        data: { isOnSale: data.isOnSale }
+      });
+    }
+    res.json({ success: true, message: `Bulk ${action} completed for ${productIds.length} products` });
+  } catch (error) {
+    console.error('Bulk action error:', error);
+    res.status(500).json({ success: false, message: "Error performing bulk action" });
+  }
+});
+
+// All payments/transactions
+app.get("/api/admin/payments", async (req, res) => {
+  try {
+    const payments = await prisma.payment.findMany({
+      include: {
+        user: { select: { fullName: true, email: true } },
+        order: { select: { id: true, status: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json({ success: true, payments });
+  } catch (error) {
+    console.error('Payments error:', error);
+    res.status(500).json({ success: false, message: "Error fetching payments" });
+  }
+});
+
+// All reviews (admin moderation)
+app.get("/api/admin/reviews", async (req, res) => {
+  try {
+    const reviews = await prisma.review.findMany({
+      include: {
+        user: { select: { fullName: true, email: true } },
+        product: { select: { id: true, name: true, imageUrl: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json({ success: true, reviews });
+  } catch (error) {
+    console.error('Reviews error:', error);
+    res.status(500).json({ success: false, message: "Error fetching reviews" });
+  }
+});
+
+// Delete review (admin moderation)
+app.delete("/api/admin/reviews/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.review.delete({ where: { id } });
+    res.json({ success: true, message: "Review deleted" });
+  } catch (error) {
+    console.error('Delete review error:', error);
+    res.status(500).json({ success: false, message: "Error deleting review" });
+  }
+});
+
+// Admin Notifications
+app.get("/api/admin/notifications", async (req, res) => {
+  try {
+    const rawOrders = await prisma.order.findMany({ orderBy: { createdAt: 'desc' }, take: 8, include: { user: true } });
+    const rawStock = await prisma.product.findMany({ where: { stock: { lte: 5 } }, take: 8 });
+    const rawReviews = await prisma.review.findMany({ orderBy: { createdAt: 'desc' }, take: 8, include: { product: true } });
+
+    let notes = [];
+    
+    // orders -> notifications
+    rawOrders.forEach(o => {
+      notes.push({
+        id: `ord-${o.id}`,
+        type: 'order',
+        message: `New order from ${o.user?.fullName || 'Customer'} (₹${o.total})`,
+        time: o.createdAt,
+        read: false
+      });
+    });
+
+    // stock -> notifications
+    rawStock.forEach(p => {
+      notes.push({
+        id: `stock-${p.id}`,
+        type: 'stock',
+        message: `Low stock: ${p.name} (${p.stock} left)`,
+        time: p.updatedAt || p.createdAt,
+        read: false
+      });
+    });
+
+    // reviews -> notifications
+    rawReviews.forEach(r => {
+      notes.push({
+        id: `rev-${r.id}`,
+        type: 'review',
+        message: `${r.rating}★ Review on ${r.product?.name || 'Product'}`,
+        time: r.createdAt,
+        read: false
+      });
+    });
+
+    // sort desc by time
+    notes.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+    // optionally format `time` on the client or here. We keep it as Date string for frontend parsing.
+
+    res.json({ success: true, notifications: notes });
+  } catch (err) {
+    console.error('Notifications error:', err);
+    res.status(500).json({ success: false, message: "Error fetching notifications" });
+  }
+});
+
+// Single order detail (admin)
+app.get("/api/admin/orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        user: { select: { id: true, fullName: true, email: true, phone: true } },
+        items: { include: { product: { select: { id: true, name: true, imageUrl: true, price: true } } } },
+        shippingAddress: true,
+        payment: true
+      }
+    });
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+    res.json({ success: true, order });
+  } catch (error) {
+    console.error('Order detail error:', error);
+    res.status(500).json({ success: false, message: "Error fetching order detail" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

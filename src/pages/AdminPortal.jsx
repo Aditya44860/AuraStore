@@ -1,656 +1,369 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingBag, 
-  Users, 
-  TrendingUp, 
-  ArrowUpRight, 
-  Clock, 
-  CheckCircle2, 
-  Truck, 
-  AlertCircle,
-  Search,
-  ChevronRight,
-  MoreVertical,
-  LogOut,
-  Trash2,
-  ExternalLink,
-  Download,
-  AlertTriangle,
-  RefreshCcw,
-  Plus
-} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard, Package, ShoppingBag, Users, CreditCard,
+  Star, Settings, LogOut, Search, Bell, Moon, Sun, Menu,
+  RefreshCcw, Lock, ArrowLeft, ChevronLeft, X, AlertCircle,
+  CheckCircle2, Info, TrendingUp
+} from 'lucide-react';
+import DashboardTab from '../components/admin/DashboardTab';
+import ProductsTab from '../components/admin/ProductsTab';
+import OrdersTab from '../components/admin/OrdersTab';
+import UsersTab from '../components/admin/UsersTab';
+import PaymentsTab from '../components/admin/PaymentsTab';
+import ReviewsTab from '../components/admin/ReviewsTab';
+import SettingsTab from '../components/admin/SettingsTab';
+import NotificationsTab from '../components/admin/NotificationsTab';
 
-// --- Custom Components ---
-
-const AuraChart = ({ data }) => {
-  if (!data || data.length === 0) return null;
-
-  const width = 800;
-  const height = 200;
-  const padding = 40;
-
-  const maxValue = Math.max(...data.map(d => d.revenue)) || 100;
-  const points = data.map((d, i) => ({
-    x: (i / (data.length - 1)) * (width - padding * 2) + padding,
-    y: (1 - (d.revenue / maxValue)) * (height - padding * 2) + padding
-  }));
-
-  const path = `M ${points.map(p => `${p.x},${p.y}`).join(' L ')}`;
-  const areaPath = `${path} L ${points[points.length - 1].x},${height - padding} L ${points[0].x},${height - padding} Z`;
-
-  return (
-    <div className="relative w-full h-[250px] bg-white rounded-3xl border border-gray-100/50 p-8 overflow-hidden group">
-      <div className="flex items-center justify-between mb-8 relative z-10">
-        <div>
-          <h3 className="text-lg font-bold">Revenue Velocity</h3>
-          <p className="text-xs text-gray-400 font-medium">Daily performance tracking (Last 14 days)</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-black rounded-full" />
-          <span className="text-xs font-bold text-gray-900">Total Sales</span>
-        </div>
-      </div>
-
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[150px] overflow-visible">
-        <defs>
-          <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(0,0,0,0.1)" />
-            <stop offset="100%" stopColor="rgba(0,0,0,0)" />
-          </linearGradient>
-        </defs>
-        
-        {/* Grid Lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
-          <line 
-            key={i}
-            x1={padding} y1={padding + p * (height - padding * 2)}
-            x2={width - padding} y2={padding + p * (height - padding * 2)}
-            stroke="#f3f4f6"
-            strokeWidth="1"
-          />
-        ))}
-
-        <motion.path
-          d={areaPath}
-          fill="url(#chartGradient)"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-        />
-
-        <motion.path
-          d={path}
-          fill="none"
-          stroke="black"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 2, ease: "easeInOut" }}
-        />
-
-        {points.map((p, i) => (
-          <motion.circle
-            key={i}
-            cx={p.x}
-            cy={p.y}
-            r="4"
-            fill="black"
-            stroke="white"
-            strokeWidth="2"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 1 + i * 0.05 }}
-            className="cursor-pointer transition-transform hover:scale-[2]"
-          >
-            <title>{`${data[i].date}: ₹${data[i].revenue}`}</title>
-          </motion.circle>
-        ))}
-      </svg>
-    </div>
-  );
-};
-
-const ActionButton = ({ onClick, icon: Icon, label, variant = "ghost", loading = false }) => {
-  const [confirm, setConfirm] = useState(false);
-
-  const handleClick = (e) => {
-    e.stopPropagation();
-    if (!confirm) {
-      setConfirm(true);
-      setTimeout(() => setConfirm(false), 3000);
-      return;
-    }
-    setConfirm(false);
-    onClick();
-  };
-
-  const baseStyles = "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300";
-  const variants = {
-    ghost: "text-gray-400 hover:text-black hover:bg-gray-100",
-    danger: confirm ? "bg-red-500 text-white shadow-lg shadow-red-100" : "text-gray-400 hover:text-red-500 hover:bg-red-50",
-    primary: "bg-black text-white hover:bg-gray-800 shadow-lg shadow-gray-200"
-  };
-
-  return (
-    <button onClick={handleClick} className={`${baseStyles} ${variants[variant]}`} disabled={loading}>
-      {loading ? (
-        <RefreshCcw size={14} className="animate-spin" />
-      ) : (
-        <>
-          <Icon size={14} />
-          {confirm ? "Confirm?" : label}
-        </>
-      )}
-    </button>
-  );
-};
-
-// --- Main Page ---
+const ADMIN_PASSWORD_KEY = 'aura_admin_pass';
+const DEFAULT_PASSWORD = 'aura999';
 
 const AdminPortal = () => {
   const navigate = useNavigate();
+  const [adminPassword, setAdminPassword] = useState(
+    () => localStorage.getItem(ADMIN_PASSWORD_KEY) || DEFAULT_PASSWORD
+  );
+  const [authenticated, setAuthenticated] = useState(
+    () => localStorage.getItem('aura_admin_auth') === 'true'
+  );
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [stats, setStats] = useState(null);
-  const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [revenueHistory, setRevenueHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem('aura_admin_dark') !== 'false'
+  );
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [deletingId, setDeletingId] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const bellRef = useRef(null);
 
   const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [statsRes, ordersRes, productsRes, usersRes, historyRes] = await Promise.all([
-        fetch(`${API_BASE}/api/admin/stats`),
-        fetch(`${API_BASE}/api/admin/orders`),
-        fetch(`${API_BASE}/api/admin/products`),
-        fetch(`${API_BASE}/api/admin/users-detailed`),
-        fetch(`${API_BASE}/api/admin/revenue-history`)
-      ]);
-      
-      const [s, o, p, u, h] = await Promise.all([
-        statsRes.json(), ordersRes.json(), productsRes.json(), usersRes.json(), historyRes.json()
-      ]);
-
-      if (s.success) setStats(s.stats);
-      if (o.success) setOrders(o.orders);
-      if (p.success) setProducts(p.products);
-      if (u.success) setUsers(u.users);
-      if (h.success) setRevenueHistory(h.history);
-    } catch (err) {
-      console.error('Error fetching admin data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    if (!authenticated) return;
+    const fetchNavNotes = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/notifications`);
+        const data = await res.json();
+        if (data.success) {
+          const localRead = JSON.parse(localStorage.getItem('aura_admin_read_notifs') || '[]');
+          const hidden = JSON.parse(localStorage.getItem('aura_admin_hidden_notifs') || '[]');
+          
+          const formatTime = (dStr) => {
+            const diff = new Date() - new Date(dStr);
+            const m = Math.floor(diff / 60000);
+            const h = Math.floor(m / 60);
+            if (h >= 24) return `${Math.floor(h/24)}d ago`;
+            if (h > 0) return `${h}h ago`;
+            if (m > 0) return `${m}m ago`;
+            return 'Just now';
+          };
+          
+          const validNotes = data.notifications
+            .filter(n => !hidden.includes(n.id))
+            .map(n => ({ ...n, time: formatTime(n.time), read: localRead.includes(n.id) }));
+            
+          setNotifications(validNotes);
+        }
+      } catch (e) {}
+    };
+    fetchNavNotes();
+    const intv = setInterval(fetchNavNotes, 30000);
+    return () => clearInterval(intv);
+  }, [authenticated, API_BASE, refreshKey]);
+
+  useEffect(() => { 
+    localStorage.setItem('aura_admin_dark', darkMode); 
+    document.body.style.backgroundColor = darkMode ? '#0a0a0b' : '#f5f5f7';
+    return () => { document.body.style.backgroundColor = ''; };
+  }, [darkMode]);
+
+  // Close bell on outside click
+  useEffect(() => {
+    const handler = (e) => { if (bellRef.current && !bellRef.current.contains(e.target)) setBellOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const handleDeleteProduct = async (id) => {
-    setDeletingId(id);
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/products/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchData();
-    } catch (err) {
-      console.error('Delete error:', err);
-    } finally {
-      setDeletingId(null);
+  // Clear search when switching tabs
+  useEffect(() => { setSearchTerm(''); }, [activeTab]);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (password === adminPassword) {
+      setAuthenticated(true);
+      localStorage.setItem('aura_admin_auth', 'true');
+      setAuthError('');
+    } else {
+      setAuthError('Incorrect password');
+      setTimeout(() => setAuthError(''), 3000);
     }
   };
 
-  const handleDeleteUser = async (id) => {
-    setDeletingId(id);
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/users/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchData();
-    } catch (err) {
-      console.error('Delete error:', err);
-    } finally {
-      setDeletingId(null);
-    }
+  const handleLogout = () => {
+    setAuthenticated(false);
+    localStorage.removeItem('aura_admin_auth');
+    setPassword('');
   };
 
-  const updateOrderStatus = async (orderId, newStatus) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
-      if (res.ok) fetchData();
-    } catch (err) {
-      console.error('Error updating status:', err);
-    }
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setRefreshKey(k => k + 1);
+    setTimeout(() => setIsRefreshing(false), 1200);
   };
 
-  const exportToCSV = (data, filename) => {
-    const headers = Object.keys(data[0]).join(',');
-    const rows = data.map(obj => Object.values(obj).join(',')).join('\n');
-    const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + rows;
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${filename}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const markAllRead = () => {
+    window.alert("Database modifications are disabled in the public demo.");
+    return;
+  };
+  const dismissNotif = (id) => {
+    window.alert("Database modifications are disabled in the public demo.");
+    return;
   };
 
-  const sidebarItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'products', label: 'Products', icon: Package },
-    { id: 'orders', label: 'Orders', icon: ShoppingBag },
-    { id: 'users', label: 'Users', icon: Users },
-  ];
+  /* ─── Search placeholder per tab ─── */
+  const searchPlaceholders = {
+    dashboard: null,
+    products: 'Search products...',
+    orders: 'Search orders...',
+    users: 'Search customers...',
+    payments: 'Search transactions...',
+    reviews: 'Search reviews...',
+    settings: null,
+  };
+  const showSearch = searchPlaceholders[activeTab] !== null;
 
-  if (loading && !stats) {
+  /* ─── Login Gate ─── */
+  if (!authenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="w-8 h-8 border-2 border-black border-t-transparent rounded-full"
-        />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0b] via-[#111113] to-[#0a0a0b] p-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="w-full max-w-md">
+          <div className="text-center mb-10">
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-white/10">
+              <span className="text-black font-black text-2xl italic">A</span>
+            </div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">AuraStore</h1>
+            <p className="text-gray-500 text-sm mt-2 font-medium">Admin Command Center</p>
+          </div>
+          <div className="bg-[#141416] border border-white/5 rounded-3xl p-8 shadow-2xl">
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-[0.15em] mb-3">Access Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" size={16} />
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter admin password"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#1a1a1d] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-gray-600" autoFocus />
+                </div>
+              </div>
+              {authError && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-400 text-xs font-medium text-center">{authError}</motion.p>}
+              <button type="submit" className="w-full py-3.5 bg-white text-black font-bold text-sm rounded-2xl hover:bg-gray-100 transition-all shadow-xl shadow-white/5 active:scale-[0.98]">Authenticate</button>
+              <p className="text-[11px] text-gray-500 text-center mt-3 font-medium tracking-wide">Default password: <span className="font-bold text-white">aura999</span></p>
+            </form>
+            <button onClick={() => navigate('/')} className="w-full mt-4 py-3 text-gray-600 text-xs font-medium hover:text-white transition-colors flex items-center justify-center gap-2">
+              <ArrowLeft size={14} />Back to Store
+            </button>
+          </div>
+        </motion.div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#fafafa] flex text-gray-900 font-sans selection:bg-black selection:text-white">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-gray-100 bg-white sticky top-0 h-screen flex flex-col z-20">
-        <div className="p-8">
-          <div className="flex items-center gap-2 mb-12">
-            <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg italic">A</span>
-            </div>
-            <span className="font-bold text-xl tracking-tighter">AuraStack</span>
-          </div>
+  /* ─── Sidebar Items ─── */
+  const sidebarItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'products', label: 'Products', icon: Package },
+    { id: 'orders', label: 'Orders', icon: ShoppingBag },
+    { id: 'users', label: 'Customers', icon: Users },
+    { id: 'payments', label: 'Payments', icon: CreditCard },
+    { id: 'reviews', label: 'Reviews', icon: Star },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
 
-          <nav className="space-y-1">
-            {sidebarItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-500 ${
-                  activeTab === item.id 
-                    ? 'bg-black text-white shadow-xl shadow-gray-200' 
-                    : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <item.icon size={18} />
-                {item.label}
-              </button>
-            ))}
-          </nav>
+  const tabDescriptions = {
+    dashboard: 'Real-time business overview',
+    products: 'Manage catalog & inventory',
+    orders: 'Track & process orders',
+    users: 'Customer management',
+    payments: 'Transaction history',
+    reviews: 'Customer feedback moderation',
+    notifications: 'System alerts & updates',
+    settings: 'Store configuration',
+  };
+
+  const renderContent = () => {
+    const p = { API_BASE, searchTerm, darkMode, refreshKey };
+    switch (activeTab) {
+      case 'dashboard': return <DashboardTab {...p} setActiveTab={setActiveTab} />;
+      case 'products': return <ProductsTab {...p} />;
+      case 'orders': return <OrdersTab {...p} />;
+      case 'users': return <UsersTab {...p} />;
+      case 'payments': return <PaymentsTab {...p} />;
+      case 'reviews': return <ReviewsTab {...p} />;
+      case 'notifications': return <NotificationsTab {...p} />;
+      case 'settings': return <SettingsTab {...p} adminPassword={adminPassword} setAdminPassword={setAdminPassword} />;
+      default: return <DashboardTab {...p} setActiveTab={setActiveTab} />;
+    }
+  };
+
+  const dm = darkMode;
+
+  return (
+    <div className={`min-h-screen flex font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300 ${dm ? 'bg-[#0a0a0b] text-white' : 'bg-[#f5f5f7] text-gray-900'}`}>
+      {mobileMenuOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setMobileMenuOpen(false)} />}
+
+      {/* ─── Sidebar ─── */}
+      <aside className={`fixed lg:sticky top-0 left-0 h-screen z-40 flex flex-col border-r transition-all duration-300 ${dm ? 'bg-[#0e0e10] border-white/5' : 'bg-white border-gray-100'} ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${sidebarCollapsed ? 'w-[72px]' : 'w-[240px]'}`}>
+        <div className={`p-5 ${sidebarCollapsed ? 'px-4' : ''}`}>
+          <div className="flex items-center gap-3">
+            <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${dm ? 'bg-white' : 'bg-black'}`}>
+              <span className={`font-black text-base italic ${dm ? 'text-black' : 'text-white'}`}>A</span>
+            </div>
+            {!sidebarCollapsed && (
+              <div className="min-w-0">
+                <span className="font-bold text-base tracking-tight block">AuraStore</span>
+                <p className={`text-[10px] font-bold uppercase tracking-[0.15em] ${dm ? 'text-gray-600' : 'text-gray-400'}`}>Admin</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="mt-auto p-8 border-t border-gray-50">
-          <button 
-            onClick={() => navigate('/')}
-            className="flex items-center gap-3 text-sm font-medium text-gray-400 hover:text-black transition-colors"
-          >
-            <LogOut size={18} />
-            Back to Store
+        <nav className={`flex-1 space-y-0.5 mt-1 overflow-y-auto ${sidebarCollapsed ? 'px-2' : 'px-3'}`}>
+          {sidebarItems.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button key={item.id} onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }} title={sidebarCollapsed ? item.label : undefined}
+                className={`w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 ${sidebarCollapsed ? 'px-3 py-3 justify-center' : 'px-3.5 py-2.5'} ${isActive ? (dm ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/20' : 'bg-black text-white shadow-sm') : (dm ? 'text-gray-500 hover:text-white hover:bg-white/5 border border-transparent' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 border border-transparent')}`}
+              >
+                <item.icon size={17} className="flex-shrink-0" />
+                {!sidebarCollapsed && item.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className={`p-3 border-t space-y-0.5 ${dm ? 'border-white/5' : 'border-gray-100'}`}>
+          {!sidebarCollapsed && (
+            <button onClick={() => navigate('/')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${dm ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50'}`}>
+              <ArrowLeft size={16} />Back to Store
+            </button>
+          )}
+          <button onClick={handleLogout} className={`w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all text-red-400 hover:text-red-300 hover:bg-red-500/10 ${sidebarCollapsed ? 'px-3 py-2.5 justify-center' : 'px-3.5 py-2.5'}`}>
+            <LogOut size={16} />{!sidebarCollapsed && 'Logout'}
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-8 lg:p-12 overflow-y-auto">
-        {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-12">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-1 capitalize">{activeTab}</h1>
-            <p className="text-gray-400 text-sm font-medium">System operational. Database synced {new Date().toLocaleTimeString()}.</p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={16} />
-              <input 
-                type="text" 
-                placeholder="Live search records..." 
-                className="pl-10 pr-4 py-2.5 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-black/5 transition-all w-64 shadow-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <button 
-              onClick={fetchData}
-              className="p-3 bg-white border border-gray-100 rounded-2xl hover:bg-gray-50 hover:rotate-180 transition-all duration-500 shadow-sm"
-            >
-              <RefreshCcw size={18} className="text-gray-600" />
+      {/* ─── Main ─── */}
+      <div className="flex-1 flex flex-col min-h-screen min-w-0">
+        {/* Top Navbar */}
+        <header className={`sticky top-0 z-20 border-b px-4 sm:px-6 py-3 flex items-center justify-between backdrop-blur-xl ${dm ? 'bg-[#0a0a0b]/90 border-white/5' : 'bg-[#f5f5f7]/90 border-gray-200/60'}`}>
+          <div className="flex items-center gap-2.5">
+            <button onClick={() => setMobileMenuOpen(true)} className={`lg:hidden p-2 rounded-xl ${dm ? 'hover:bg-white/5' : 'hover:bg-gray-100'}`}><Menu size={20} /></button>
+            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className={`hidden lg:flex p-2 rounded-xl transition-all ${dm ? 'hover:bg-white/5' : 'hover:bg-gray-100'}`}>
+              <ChevronLeft size={17} className={`transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`} />
             </button>
+            <div>
+              <h1 className="text-base sm:text-lg font-bold capitalize leading-tight">{activeTab}</h1>
+              <p className={`text-[11px] font-medium hidden sm:block leading-none mt-0.5 ${dm ? 'text-gray-600' : 'text-gray-400'}`}>{tabDescriptions[activeTab]}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Contextual search */}
+            <AnimatePresence>
+              {showSearch && (
+                <motion.div initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }} className="relative hidden md:block overflow-hidden">
+                  <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${dm ? 'text-gray-600' : 'text-gray-400'}`} size={14} />
+                  <input type="text" placeholder={searchPlaceholders[activeTab]} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                    className={`pl-9 pr-10 py-2 w-44 lg:w-56 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${dm ? 'bg-white/5 border-white/5 text-white placeholder:text-gray-600' : 'bg-white border-gray-200 placeholder:text-gray-400'}`}
+                  />
+                  {searchTerm && (
+                    <button onClick={() => setSearchTerm('')} className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg ${dm ? 'hover:bg-white/10 text-gray-500' : 'hover:bg-gray-100 text-gray-400'}`}><X size={12} /></button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Refresh */}
+            <button onClick={handleRefresh}
+              className={`p-2 rounded-xl transition-all ${dm ? 'hover:bg-white/5' : 'hover:bg-gray-100'}`} title="Refresh data">
+              <motion.div animate={{ rotate: isRefreshing ? 360 : 0 }} transition={{ duration: 0.8, ease: 'easeInOut' }}>
+                <RefreshCcw size={16} className={isRefreshing ? 'text-indigo-500' : (dm ? 'text-gray-500' : 'text-gray-400')} />
+              </motion.div>
+            </button>
+
+            {/* Bell */}
+            <div className="relative" ref={bellRef}>
+              <button onClick={() => setBellOpen(!bellOpen)}
+                className={`relative p-2 rounded-xl transition-all ${bellOpen ? (dm ? 'bg-white/10' : 'bg-gray-100') : (dm ? 'hover:bg-white/5' : 'hover:bg-gray-100')}`}>
+                <Bell size={16} className={dm ? 'text-gray-500' : 'text-gray-400'} />
+                {unreadCount > 0 && (
+                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
+                    className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-indigo-500 rounded-full text-[8px] font-bold text-white flex items-center justify-center">
+                    {unreadCount}
+                  </motion.span>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {bellOpen && (
+                  <motion.div initial={{ opacity: 0, y: 8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    className={`absolute right-0 top-12 w-80 rounded-2xl border shadow-2xl z-50 overflow-hidden ${dm ? 'bg-[#141416] border-white/5' : 'bg-white border-gray-100'}`}>
+                    <div className={`flex items-center justify-between px-4 py-3 border-b ${dm ? 'border-white/5' : 'border-gray-100'}`}>
+                      <span className="text-sm font-bold">Notifications</span>
+                      <button onClick={markAllRead} className={`text-[10px] font-bold uppercase tracking-[0.1em] transition-colors ${dm ? 'text-gray-500 hover:text-white' : 'text-gray-400 hover:text-black'}`}>Mark all read</button>
+                    </div>
+                    <div className="max-h-72 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <p className={`text-center py-8 text-sm ${dm ? 'text-gray-600' : 'text-gray-400'}`}>No notifications</p>
+                      ) : notifications.slice(0, 15).map(n => (
+                        <div key={n.id} className={`flex items-start gap-3 px-4 py-3 transition-colors group ${n.read ? '' : (dm ? 'bg-indigo-500/5' : 'bg-indigo-50/50')} ${dm ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}>
+                          <div className={`p-1.5 rounded-lg flex-shrink-0 mt-0.5 ${n.read ? (dm ? 'bg-white/5 text-gray-600' : 'bg-gray-50 text-gray-400') : 'bg-indigo-500/10 text-indigo-500'}`}>
+                            {n.type === 'order' && <ShoppingBag size={13} />}
+                            {n.type === 'stock' && <AlertCircle size={13} />}
+                            {n.type === 'review' && <Star size={13} />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs font-medium ${n.read ? (dm ? 'text-gray-400' : 'text-gray-600') : (dm ? 'text-white' : 'text-gray-900')}`}>{n.message}</p>
+                            <p className={`text-[10px] mt-0.5 ${dm ? 'text-gray-700' : 'text-gray-300'}`}>{n.time}</p>
+                          </div>
+                          <button onClick={() => dismissNotif(n.id)} className={`opacity-0 group-hover:opacity-100 p-1 rounded-lg transition-all ${dm ? 'hover:bg-white/10 text-gray-600' : 'hover:bg-gray-100 text-gray-400'}`}><X size={12} /></button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className={`p-2 border-t ${dm ? 'border-white/5' : 'border-gray-100'}`}>
+                      <button onClick={() => { setActiveTab('notifications'); setBellOpen(false); }} className={`w-full py-2 rounded-xl text-xs font-bold transition-colors ${dm ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-gray-50 hover:bg-gray-100 text-gray-900'}`}>View all activity</button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Dark mode */}
+            <button onClick={() => setDarkMode(!dm)} className={`p-2 rounded-xl transition-all ${dm ? 'hover:bg-white/5 text-yellow-400' : 'hover:bg-gray-100 text-gray-500'}`}>
+              {dm ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${dm ? 'bg-indigo-500/20 text-indigo-400' : 'bg-black text-white'}`}>A</div>
           </div>
         </header>
 
-        <AnimatePresence mode="wait">
-          {activeTab === 'dashboard' && (
-            <motion.div 
-              key="dashboard"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-8"
-            >
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                  { label: 'Gross Revenue', value: `₹${stats?.totalRevenue.toLocaleString()}`, icon: TrendingUp, color: 'text-emerald-500' },
-                  { label: 'Total Orders', value: stats?.totalOrders, icon: ShoppingBag, color: 'text-blue-500' },
-                  { label: 'Inventory Size', value: stats?.totalProducts, icon: Package, color: 'text-purple-500' },
-                  { label: 'Admin/Users', value: stats?.totalUsers, icon: Users, color: 'text-orange-500' },
-                ].map((stat, i) => (
-                  <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`p-2.5 rounded-2xl bg-gray-50 ${stat.color}`}>
-                        <stat.icon size={20} />
-                      </div>
-                      <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2.5 py-1.5 rounded-full uppercase tracking-widest">
-                        Live
-                      </span>
-                    </div>
-                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">{stat.label}</p>
-                    <h3 className="text-2xl font-bold">{stat.value}</h3>
-                  </div>
-                ))}
-              </div>
-
-              {/* Chart Section */}
-              <AuraChart data={revenueHistory} />
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Recent Orders Card */}
-                <div className="lg:col-span-2 bg-white rounded-[32px] border border-gray-100/50 shadow-sm p-8">
-                  <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-xl font-bold">Latest Transactions</h2>
-                    <button 
-                      onClick={() => setActiveTab('orders')}
-                      className="text-[10px] font-bold text-gray-400 hover:text-black uppercase tracking-[0.2em] flex items-center gap-2"
-                    >
-                      Audit All <ChevronRight size={14} />
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {orders.slice(0, 5).map((order) => (
-                      <div key={order.id} className="flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50/50 transition-all border border-transparent hover:border-gray-100">
-                        <div className="flex items-center gap-4">
-                          <div className="w-11 h-11 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-500">
-                            <ShoppingBag size={20} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-gray-900">{order.user.fullName}</p>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{order.status} • ₹{parseFloat(order.total).toLocaleString()}</p>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={() => setActiveTab('orders')}
-                          className="p-2 text-gray-300 hover:text-black transition-colors"
-                        >
-                          <ArrowUpRight size={18} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Status Breakdown */}
-                <div className="bg-white rounded-[32px] border border-gray-100/50 shadow-sm p-8">
-                  <h2 className="text-xl font-bold mb-8">Order Logistics</h2>
-                  <div className="space-y-6">
-                    {stats?.statusDistribution.map((dist) => (
-                      <div key={dist.status}>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{dist.status}</span>
-                          <span className="text-xs font-bold">{Math.round((dist._count / (stats.totalOrders || 1)) * 100)}%</span>
-                        </div>
-                        <div className="w-full h-2 bg-gray-50 rounded-full overflow-hidden">
-                          <motion.div 
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(dist._count / (stats.totalOrders || 1)) * 100}%` }}
-                            transition={{ duration: 1.5, ease: "easeOut" }}
-                            className={`h-full ${
-                              dist.status === 'DELIVERED' ? 'bg-emerald-500' :
-                              dist.status === 'SHIPPED' ? 'bg-blue-500' :
-                              'bg-orange-500'
-                            }`}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+        {/* Content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+          <AnimatePresence mode="wait">
+            <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+              {renderContent()}
             </motion.div>
-          )}
-
-          {activeTab === 'products' && (
-            <motion.div 
-              key="products"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Catalog Management</h2>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => exportToCSV(products, 'inventory-export')}
-                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold hover:bg-gray-50 transition-all shadow-sm"
-                  >
-                    <Download size={14} /> Export CSV
-                  </button>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all shadow-xl shadow-gray-200">
-                    <Plus size={14} /> Add Product
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[32px] border border-gray-100/50 shadow-sm overflow-hidden">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-gray-50 bg-gray-50/30">
-                      <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Listing</th>
-                      <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Category</th>
-                      <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Status</th>
-                      <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Retail</th>
-                      <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50/50 transition-colors group">
-                        <td className="px-8 py-5">
-                          <div className="flex items-center gap-4">
-                            <img src={product.imageUrl} alt="" className="w-12 h-12 rounded-2xl object-cover bg-gray-50 shadow-sm" />
-                            <div>
-                              <p className="text-sm font-bold text-gray-900">{product.name}</p>
-                              <p className="text-[10px] text-gray-400 font-medium">ID: {product.id.slice(0,8)}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-8 py-5">
-                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50 px-2.5 py-1 rounded-lg">
-                            {product.category?.name || 'General'}
-                          </span>
-                        </td>
-                        <td className="px-8 py-5">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 10 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-orange-500' : 'bg-red-500'}`} />
-                            <p className="text-sm font-bold">{product.stock > 0 ? `${product.stock} in stock` : 'Out of Stock'}</p>
-                          </div>
-                        </td>
-                        <td className="px-8 py-5 text-sm font-bold text-gray-900">₹{parseFloat(product.price).toLocaleString()}</td>
-                        <td className="px-8 py-5">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <button 
-                              onClick={() => navigate(`/product/${product.id}`)}
-                              className="p-2 text-gray-400 hover:text-black transition-colors"
-                            >
-                              <ExternalLink size={16} />
-                            </button>
-                            <ActionButton 
-                              onClick={() => handleDeleteProduct(product.id)}
-                              icon={Trash2}
-                              label="Delete"
-                              variant="danger"
-                              loading={deletingId === product.id}
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'users' && (
-            <motion.div 
-              key="users"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="space-y-6"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">User Ecosystem</h2>
-                <button 
-                  onClick={() => exportToCSV(users, 'user-audit')}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold hover:bg-gray-50 transition-all shadow-sm"
-                >
-                  <Download size={14} /> Audit Report
-                </button>
-              </div>
-
-              <div className="bg-white rounded-[32px] border border-gray-100/50 shadow-sm p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {users.filter(u => u.fullName.toLowerCase().includes(searchTerm.toLowerCase())).map((user) => (
-                    <div key={user.id} className="p-6 rounded-3xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-xl hover:border-transparent transition-all duration-500 group">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-white font-bold text-lg">
-                          {user.fullName[0]}
-                        </div>
-                        <ActionButton 
-                          onClick={() => handleDeleteUser(user.id)}
-                          icon={Trash2}
-                          variant="danger"
-                          loading={deletingId === user.id}
-                        />
-                      </div>
-                      <h3 className="font-bold text-gray-900 mb-1">{user.fullName}</h3>
-                      <p className="text-xs text-gray-400 font-medium mb-4">{user.email}</p>
-                      
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div>
-                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Lifetime Value</p>
-                          <p className="text-sm font-bold text-black font-mono">₹{user.totalSpend.toLocaleString()}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Orders</p>
-                          <p className="text-sm font-bold text-black">{user.orderCount}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {users.length === 0 && (
-                  <div className="py-20 text-center">
-                    <AlertTriangle size={48} className="mx-auto text-gray-200 mb-4" />
-                    <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No users synchronized</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'orders' && (
-            <motion.div 
-              key="orders"
-              initial={{ opacity: 0, filter: "blur(10px)" }}
-              animate={{ opacity: 1, filter: "blur(0px)" }}
-              className="space-y-6"
-            >
-              {orders.filter(o => o.user.fullName.toLowerCase().includes(searchTerm.toLowerCase())).map((order) => (
-                <div key={order.id} className="bg-white rounded-[32px] border border-gray-100/50 shadow-sm p-8 hover:shadow-xl transition-all duration-500 group">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-8">
-                    <div className="flex items-center gap-6">
-                      <div className="w-16 h-16 bg-gray-50 rounded-[24px] flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white transition-all duration-500">
-                        <ShoppingBag size={28} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-bold">INV-{order.id.slice(0,8).toUpperCase()}</h3>
-                          <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">PAID</span>
-                        </div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">{new Date(order.createdAt).toLocaleString()} • {order.user.fullName}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-12">
-                      <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Total Yield</p>
-                        <p className="text-xl font-bold font-mono">₹{parseFloat(order.total).toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Workflow Status</p>
-                        <select 
-                          value={order.status}
-                          onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                          className={`text-[10px] font-bold uppercase tracking-widest px-6 py-2.5 rounded-2xl border-none focus:ring-4 focus:ring-black/5 cursor-pointer shadow-sm ${
-                            order.status === 'DELIVERED' ? 'bg-emerald-50 text-emerald-600' :
-                            order.status === 'SHIPPED' ? 'bg-blue-50 text-blue-600' :
-                            order.status === 'PENDING' ? 'bg-orange-50 text-orange-600' :
-                            'bg-gray-50 text-gray-600'
-                          }`}
-                        >
-                          <option value="PENDING">Hold / Pending</option>
-                          <option value="SHIPPED">Dispatched</option>
-                          <option value="DELIVERED">Settled / Delivered</option>
-                          <option value="CANCELED">Archived / Canceled</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-8 border-t border-gray-50">
-                    {order.items.map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50/50 rounded-2xl border border-transparent hover:border-gray-100 transition-colors">
-                        <div className="w-10 h-10 bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 flex items-center justify-center font-bold text-[10px] italic">
-                          A
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-gray-900">{item.product.name}</p>
-                          <p className="text-[10px] text-gray-400 font-medium">QTY: {item.quantity} • {item.size}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-
-      <style>{`
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+          </AnimatePresence>
+        </main>
+      </div>
     </div>
   );
 };

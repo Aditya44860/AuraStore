@@ -205,12 +205,12 @@ function Home() {
       {/* ═══════════════════════════════════════
           1. HERO — Image with Parallax
           ═══════════════════════════════════════ */}
-      <section ref={heroRef} className="relative h-screen w-full overflow-hidden -mt-16 sm:-mt-20">
+      <section ref={heroRef} className="relative h-[85vh] sm:h-screen w-full overflow-hidden -mt-16 sm:-mt-20">
         <motion.div style={{ scale: heroScale, y: heroY }} className="absolute inset-0 w-full h-full">
           <img
             src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=2000&auto=format&fit=crop"
             alt="Luxury Fashion"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover origin-center"
           />
           <div className="absolute inset-0 bg-black/45" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
@@ -351,7 +351,7 @@ function Home() {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* 3D Rotating Shoe */}
             <div className="relative flex items-center justify-center order-1 lg:order-1">
-              <div className="relative w-[320px] h-[380px] sm:w-[420px] sm:h-[480px] lg:w-[520px] lg:h-[520px]">
+              <div className="relative w-full aspect-square max-w-[340px] sm:max-w-[420px] lg:max-w-none lg:w-[520px] lg:h-[520px]">
                 {/* Circular orbit tracks */}
                 <div className="absolute inset-[10%] rounded-full border border-gray-200/30 border-dashed pointer-events-none" />
                 <div className="absolute inset-[22%] rounded-full border border-gray-200/20 border-dashed pointer-events-none" />

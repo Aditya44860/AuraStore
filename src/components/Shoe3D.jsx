@@ -112,8 +112,12 @@ export default function Shoe3DScene({ scrollProgress }) {
       <Canvas
         camera={{ position: [0, 1, 4], fov: 30 }}
         dpr={[1, 2]}
-        shadows
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        shadows={{ type: 1 }} // 1 is PCFShadowMap, avoids PCFSoftShadowMap deprecation
+        gl={{ 
+          antialias: true, 
+          alpha: true, 
+          powerPreference: 'high-performance',
+        }}
         style={{ background: 'transparent' }}
       >
         <Suspense fallback={null}>

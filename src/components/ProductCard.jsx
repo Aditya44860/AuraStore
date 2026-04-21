@@ -54,7 +54,7 @@ function ProductCard({ id, name, price, originalPrice, image, gallery = [], cate
           e.stopPropagation()
           toggleWishlist()
         }}
-        className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white rounded-full shadow-sm transition-all duration-300 overflow-visible"
+        className="absolute top-2 right-2 z-10 w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white rounded-full shadow-sm transition-all duration-300 overflow-visible"
       >
         <AnimatePresence>
           {isBursting && (
@@ -91,12 +91,12 @@ function ProductCard({ id, name, price, originalPrice, image, gallery = [], cate
         </motion.div>
       </button>
       <div
-        className="relative w-full bg-gray-50 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory hide-scrollbar aspect-[3/4]"
+        className="relative w-full bg-gray-50 flex flex-nowrap gap-0 overflow-x-auto overflow-y-hidden snap-x snap-mandatory hide-scrollbar aspect-[3/4]"
         style={{ overscrollBehaviorX: "contain" }}
       >
         {images.length > 0 && images[0] ? (
           images.map((img, idx) => (
-            <div key={idx} className="min-w-full snap-start relative h-full">
+            <div key={idx} className="w-full flex-shrink-0 snap-start relative h-full overflow-hidden">
               <img
                 src={img}
                 alt={`${name} angle ${idx + 1}`}

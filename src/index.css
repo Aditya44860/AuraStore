@@ -14,11 +14,33 @@ body,
   -moz-osx-font-smoothing: grayscale;
   font-weight: 300;
   letter-spacing: 0.01em;
+  overflow-x: hidden;
+  position: relative;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Global Responsive Typography */
+@media (max-width: 640px) {
+  h1 { font-size: clamp(2rem, 8vw, 3rem) !important; }
+  h2 { font-size: clamp(1.5rem, 6vw, 2.2rem) !important; }
+  .section-padding { padding-top: 4rem; padding-bottom: 4rem; }
+  
+  /* Prevent zoom on input focus in iOS */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Smooth page-level scrolling */
 html {
   scroll-behavior: smooth;
+  touch-action: manipulation;
+}
+
+/* Global button and link touch target fixes */
+a, button, [role="button"], input, select, textarea {
+  touch-action: manipulation;
 }
 
 /* ===== SMOOTH SCROLLBAR ===== */

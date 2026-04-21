@@ -331,8 +331,18 @@ function Navbar() {
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
               onClick={() => setShowMobileSearch(false)}
             />
-            <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md z-50" ref={mobileSearchRef}>
-              <SearchBox onSearchSubmit={() => setShowMobileSearch(false)} autoFocus={true} />
+            <div className="fixed top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-3xl z-50 px-4 flex items-center shadow-sm" ref={mobileSearchRef}>
+              <div className="w-full max-w-2xl mx-auto">
+                <SearchBox onSearchSubmit={() => setShowMobileSearch(false)} autoFocus={true} />
+              </div>
+              <button 
+                onClick={() => setShowMobileSearch(false)}
+                className="ml-3 p-2 text-gray-500"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </>
         )}
@@ -347,7 +357,7 @@ function Navbar() {
             />
 
             {/* Slide-in menu */}
-            <div className="fixed top-0 left-0 h-full w-[75%] max-w-[320px] bg-white/95 backdrop-blur-2xl z-50 transform transition-transform duration-500 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]">
+            <div className="fixed top-0 left-0 h-full w-[85%] max-w-[340px] bg-white/90 backdrop-blur-[40px] z-50 transform transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-[20px_0_60px_-15px_rgba(0,0,0,0.15)]">
               {/* Close button */}
               <button
                 onClick={() => setShowMobileMenu(false)}

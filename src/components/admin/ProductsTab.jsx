@@ -183,10 +183,10 @@ const ProductsTab = ({ API_BASE, searchTerm, darkMode, refreshKey }) => {
                     {p.originalPrice && <span className={`text-[10px] line-through ml-1.5 ${dm ? 'text-gray-600' : 'text-gray-400'}`}>₹{parseFloat(p.originalPrice).toLocaleString('en-IN')}</span>}
                   </td>
                   <td className="px-5 py-3">
-                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(p)} className={`p-1.5 rounded-lg transition-colors ${dm ? 'hover:bg-white/10 text-gray-500 hover:text-white' : 'hover:bg-gray-100 text-gray-400 hover:text-black'}`}><Edit3 size={14} /></button>
-                      <button onClick={() => navigate(`/product/${p.id}`)} className={`p-1.5 rounded-lg transition-colors ${dm ? 'hover:bg-white/10 text-gray-500 hover:text-white' : 'hover:bg-gray-100 text-gray-400 hover:text-black'}`}><ExternalLink size={14} /></button>
-                      <button onClick={() => handleDelete(p.id)} disabled={deletingId === p.id} className={`p-1.5 rounded-lg transition-colors ${dm ? 'hover:bg-red-500/10 text-gray-500 hover:text-red-400' : 'hover:bg-red-50 text-gray-400 hover:text-red-500'}`}>{deletingId === p.id ? <RefreshCcw size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>
+                    <div className="flex items-center justify-end gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openEdit(p)} className={`p-1.5 rounded-lg transition-colors ${dm ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-black'}`}><Edit3 size={14} /></button>
+                      <button onClick={() => navigate(`/product/${p.id}`)} className={`p-1.5 rounded-lg transition-colors ${dm ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-black'}`}><ExternalLink size={14} /></button>
+                      <button onClick={() => handleDelete(p.id)} disabled={deletingId === p.id} className={`p-1.5 rounded-lg transition-colors ${dm ? 'hover:bg-red-500/10 text-gray-400 hover:text-red-400' : 'hover:bg-red-50 text-gray-500 hover:text-red-500'}`}>{deletingId === p.id ? <RefreshCcw size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>
                     </div>
                   </td>
                 </tr>

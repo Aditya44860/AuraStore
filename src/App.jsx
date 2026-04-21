@@ -1,4 +1,5 @@
 import Navbar from './components/Navbar'
+import ChatBot from './components/ChatBot'
 import Home from './pages/Home'
 import Profile from './pages/Profile'
 import UpperWear from './pages/UpperWear'
@@ -48,7 +49,10 @@ const router = createBrowserRouter([
 ])
 
 const App = () => (
-  <RouterProvider router={router} />
+  <>
+    <RouterProvider router={router} />
+    <ChatBot />
+  </>
 )
 
 export default App

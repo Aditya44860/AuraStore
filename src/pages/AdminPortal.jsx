@@ -42,7 +42,10 @@ const AdminPortal = () => {
   const [notifications, setNotifications] = useState([]);
   const bellRef = useRef(null);
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
+  if (!API_BASE) {
+    console.error("API configuration missing: VITE_API_BASE_URL");
+  }
 
   useEffect(() => {
     if (!authenticated) return;

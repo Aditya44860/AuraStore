@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-function SearchBox({ onSearchSubmit, autoFocus = false }) {
+function SearchBox({ onSearchSubmit, autoFocus = false, isTransparent = false }) {
   const baseTexts = [
     "T-Shirts",
     "Hoodies",
@@ -105,13 +105,17 @@ function SearchBox({ onSearchSubmit, autoFocus = false }) {
 
   return (
     <div className="relative w-full sm:w-64 lg:w-72" ref={dropdownRef}>
-      <div className="relative flex items-center bg-gray-100/70 rounded-full px-3 sm:px-4 py-2">
-      <svg
-        className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <div className={`relative flex items-center rounded-full px-3 sm:px-4 py-2 transition-all duration-300 ${
+        isTransparent 
+          ? "bg-white/10 border border-white/20 backdrop-blur-sm" 
+          : "bg-gray-100/50 border border-transparent"
+      }`}>
+        <svg
+          className={`w-4 h-4 mr-2 flex-shrink-0 transition-colors duration-300 ${isTransparent ? "text-white/60" : "text-gray-400"}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -143,7 +147,9 @@ function SearchBox({ onSearchSubmit, autoFocus = false }) {
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="absolute top-0 left-0 w-full bg-transparent outline-none text-[12px] sm:text-[13px] text-gray-700 placeholder-gray-400 font-light"
+          className={`absolute top-0 left-0 w-full bg-transparent outline-none text-[12px] sm:text-[13px] font-normal transition-colors duration-300 ${
+            isTransparent ? "text-white placeholder-white/70" : "text-gray-900 placeholder-gray-500"
+          }`}
           placeholder={isFocused || inputValue ? "Search products..." : ""}
           onFocus={() => {
             setIsFocused(true);

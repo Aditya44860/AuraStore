@@ -4,16 +4,57 @@ const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const emailjs = require('@emailjs/nodejs');
 const { PrismaClient } = require('@prisma/client');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const fs = require('fs');
+const path = require('path');
 require("dotenv").config();
+
+// Mandatory Config Validation
+const REQUIRED_ENV_VARS = ["PORT", "ALLOWED_ORIGINS", "JWT_SECRET", "GEMINI_API_KEY"];
+REQUIRED_ENV_VARS.forEach(varName => {
+  if (!process.env[varName]) {
+    console.error(`CRITICAL: Missing mandatory environment variable: ${varName}`);
+    process.exit(1);
+  }
+});
 
 const prisma = new PrismaClient();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT; // Strict requirement
 const JWT_SECRET = process.env.JWT_SECRET;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// Middleware
-app.use(cors());
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ 
+  model: "gemini-1.5-flash",
+  systemInstruction: "You are an AI customer support bot for AuraStore. Your goal is to help users with their queries about the store, products, shipping, returns, and other policies. Use the provided company rules to answer queries accurately. If you don't know the answer, ask the user to contact support at support@aurastore.com. Be polite, professional, and helpful."
+});
+
+// Load company rules
+let companyRules = "";
+try {
+  companyRules = fs.readFileSync(path.join(__dirname, 'company_rules.txt'), 'utf8');
+} catch (error) {
+  console.error("Error loading company rules:", error);
+}
+
+// Middleware - Strict CORS
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(",");
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl) 
+    // but validate against whitelist if present
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked request from origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // Register endpoint
@@ -1676,6 +1717,52 @@ app.get("/api/admin/orders/:id", async (req, res) => {
   } catch (error) {
     console.error('Order detail error:', error);
     res.status(500).json({ success: false, message: "Error fetching order detail" });
+  }
+});
+
+// AI Chat endpoint
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { message, history } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ message: "Message is required" });
+    }
+
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "your_gemini_api_key_here") {
+      return res.status(503).json({ 
+        message: "AI Support is temporarily unavailable (API Key missing). Please contact support@aurastore.com.",
+        isConfigError: true
+      });
+    }
+
+    // Start chat with history
+    const chat = model.startChat({
+      history: history || [],
+      generationConfig: {
+        maxOutputTokens: 1000,
+      },
+    });
+
+    // Provide context in the message if it's the first message or every time for RAG-like behavior
+    // For a small file, we can just prepend it or use it as a system instruction (which we already did)
+    // We'll add a reminder of the rules in the prompt to ensure it stays grounded
+    const prompt = `Context (Company Rules):
+${companyRules}
+
+User Query: ${message}`;
+
+    const result = await chat.sendMessage(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    res.json({ 
+      success: true, 
+      reply: text 
+    });
+  } catch (error) {
+    console.error("Chat error:", error);
+    res.status(500).json({ message: "Failed to process chat. Please try again later." });
   }
 });
 

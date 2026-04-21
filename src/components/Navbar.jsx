@@ -2,11 +2,14 @@ import { Link, useLocation } from "react-router-dom";
 import SearchBox from "./SearchBox";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { useChat } from "../context/ChatContext";
 import { useState, useRef, useEffect } from "react";
+import { MessageSquare } from "lucide-react";
 
 function Navbar() {
   const { isLoggedIn, user } = useAuth();
   const { getCartCount, getWishlistCount } = useCart();
+  const { toggleChat } = useChat();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -146,7 +149,7 @@ function Navbar() {
           <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Search - desktop only */}
             <div className="hidden lg:flex">
-              <SearchBox />
+              <SearchBox isTransparent={isTransparent} />
             </div>
             <button
               onClick={() => setShowMobileSearch(true)}
@@ -296,6 +299,27 @@ function Navbar() {
                   </span>
                 )}
               </Link>
+              
+              {/* Chat Icon */}
+              <button
+                onClick={toggleChat}
+                className={`p-2 transition-colors duration-300 relative ${iconColor}`}
+                title="Customer Support"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
         </div>

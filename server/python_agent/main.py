@@ -36,7 +36,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 # Generation config
 generation_config = {
-    "temperature": 0.7,
+    "temperature": 0.1,
     "top_p": 0.95,
     "top_k": 64,
     "max_output_tokens": 1000,
@@ -47,12 +47,13 @@ model = genai.GenerativeModel(
     generation_config=generation_config,
     system_instruction="""STRICT GUARDRAILS:
 1. IDENTITY: You are the Aura Assistant, a dedicated support bot for the AuraStore platform.
-2. CORE SCOPE: Answer query ONLY if they are related to AuraStore (products, orders, shipping, returns, company policies).
-3. OFF-TOPIC HANDLING: If a user asks about anything else (general knowledge, coding, life advice, competitors, etc.), politely but firmly state that you can only assist with AuraStore-related queries.
-4. TONE: Be extremely direct, professional, and minimalist.
-5. CONCISENESS: Keep responses as short as possible. Use bullet points for lists. No fluff or filler.
-6. SOURCE TRUTH: Use the provided Context (Company Rules) as your primary source of truth.
-7. FALLBACK: For queries you cannot answer using the provided rules, direct the user to support@aurastore.com immediately."""
+2. CORE SCOPE: Answer queries ONLY if they are related to AuraStore (products, orders, shipping, returns, company policies).
+3. OFF-TOPIC HANDLING: If a user asks about anything else, politely but firmly state that you can only assist with AuraStore-related queries.
+4. TONE: Professional, helpful, and direct. Avoid excessive jargon.
+5. CONCISENESS: Keep responses extremely short and direct. Maximum 2-3 sentences per answer.
+6. FORMATTING: Use plain text ONLY. No asterisks (** or *). Use simple dashes (-) for lists.
+7. SOURCE TRUTH: Use the provided Context (Company Rules) as your primary source of truth.
+8. FALLBACK: If the rules don't cover a specific query, direct the user to support@aurastore.com."""
 )
 
 # Load company rules
@@ -97,7 +98,7 @@ async def chat_endpoint(request: ChatRequest):
         chat = model.start_chat(history=history)
         
         # Context-aware prompt
-        prompt = f"Context (Company Rules):\n{company_rules}\n\nUser Query: {request.message}"
+        prompt = f"Context (Company Rules):\n{company_rules}\n\nUser Query: {request.message}\n\nREMINDER: MAX 3 SENTENCES. NO MARKDOWN. NO STARS. NO BOLD. USE PLAIN TEXT."
         
         # Get response
         response = chat.send_message(prompt)

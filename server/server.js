@@ -1758,7 +1758,9 @@ app.post("/api/chat", async (req, res) => {
     const prompt = `Context (Company Rules):
 ${companyRules}
 
-User Query: ${message}`;
+User Query: ${message}
+
+STRICT RULE: MAX 3 SENTENCES. DO NOT USE ASTERISKS (*) OR DOUBLE ASTERISKS (**). NO MARKDOWN BOLD. USE PLAIN TEXT ONLY.`;
 
     const result = await chat.sendMessage(prompt);
     const response = await result.response;

@@ -1,0 +1,13 @@
+{
+  "name": "aurastore-python-agent",
+  "version": "1.0.0",
+  "description": "Python AI Agent for AuraStore",
+  "main": "main.py",
+  "scripts": {
+    "dev": "./.venv/bin/python main.py",
+    "start": "./.venv/bin/python main.py"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

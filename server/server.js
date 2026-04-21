@@ -22,6 +22,10 @@ const prisma = new PrismaClient();
 
 const app = express();
 
+app.head("/health", (req, res) => {
+  res.status(200).end();
+});
+
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "healthy", service: "AuraStore Backend" });
 });

@@ -72,6 +72,7 @@ class ChatRequest(BaseModel):
     message: str
     history: Optional[List[dict]] = None
 
+@app.head("/health")
 @app.get("/health")
 async def health():
     return {"status": "healthy", "service": "AuraStore RAG Agent"}

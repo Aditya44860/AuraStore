@@ -1,45 +1,49 @@
-AuraStore - Company Policies & Rules
+AuraStore India - Company Policies & Rules
 
 1. Shipping & Delivery
-- We offer free shipping on all orders over $100.
-- For orders under $100, a flat shipping fee of $10 applies.
-- Standard delivery takes 3-5 business days. 
-- Express delivery is available for $25 and takes 1-2 business days.
-- We currently ship to all states in the US and Canada.
+- We offer free standard shipping on all orders over ₹2,999.
+- For orders under ₹2,999, a flat shipping fee of ₹150 applies.
+- Delivery Timelines:
+  - Metro Cities (Mumbai, Delhi, Bangalore, etc.): 2-4 business days.
+  - rest of India: 5-7 business days.
+- Express delivery (Next Day) is available in select metros for ₹499.
+- We currently ship to all valid PIN codes across India via our logistics partners.
 
 2. Returns & Exchanges
-- You can return or exchange any item within 30 days of purchase.
-- Items must be in their original condition, unworn, and with all tags attached.
-- Returns for store credit are free.
-- Returns for a refund to the original payment method incur a $5 restocking fee.
-- Sale items marked as "Final Sale" cannot be returned or exchanged.
+- You can initiate a return or exchange within 15 days of delivery.
+- Items must be in original condition with all tags, packaging, and invoices intact.
+- Reverse Pickups: We offer free reverse pickup for return requests.
+- Refunds:
+  - Prepaid orders: Refunded to original payment method within 5-7 business days.
+  - COD orders: Refunded as Store Credit or Bank Transfer.
+- Innerwear and items marked "Non-Returnable" cannot be returned for hygiene reasons.
 
-3. Privacy Policy
-- We value your privacy and protect your personal data.
-- We use industry-standard encryption for all transactions.
-- We do not sell your personal information to third parties.
-- Cookies are used only to improve your shopping experience and remember your cart.
+3. Privacy & Data Protection
+- We comply with Indian Data Protection regulations.
+- All payment transactions are secured via PCI-DSS compliant gateways.
+- We do not share your mobile number or email with third-party telemarketers.
 
-4. Contact Information
-- Email: support@aurastore.com
-- Phone: +1 (555) AURA-999
-- Support Hours: Monday to Friday, 9:00 AM - 6:00 PM EST.
-- Address: 123 Aura Lane, Fashion District, New York, NY 10001.
+4. Contact Information (India Support)
+- Email: support.in@aurastore.com
+- Phone: +91 1800-AURA-IND (Toll-Free)
+- Support Hours: Monday to Saturday, 10:00 AM - 7:00 PM IST.
+- Registered Address: Level 5, Aura Tower, Bandra Kurla Complex (BKC), Mumbai, Maharashtra 400051.
 
 5. Payment Methods
-- We accept all major credit cards (Visa, MasterCard, American Express).
-- We also support PayPal, Apple Pay, and Google Pay.
-- Cryptocurrencies (Bitcoin, Ethereum) are accepted via BitPay.
+- UPI: Google Pay, PhonePe, Paytm, and BHIM.
+- Cards: All major Indian Debit/Credit cards (Visa, MasterCard, RuPay).
+- Net Banking: Support for 50+ Indian banks.
+- Cash on Delivery (COD): Available for orders up to ₹10,000.
 
 6. Frequently Asked Questions (FAQ)
-- Q: Can I track my order?
-  A: Yes, once your order is shipped, you will receive a tracking number via email.
-- Q: Do you have a physical store?
-  A: Currently, AuraStore is an online-only boutique.
-- Q: How do I change my account password?
-  A: You can change your password in the Profile section after logging in.
+- Q: Do you ship internationally?
+  - A: Currently, AuraStore India only ships within the domestic borders of India.
+- Q: Can I pay via EMI?
+  - A: Yes, we offer No-Cost EMI on select credit cards for orders above ₹5,000.
+- Q: How do I track my shipment?
+  - A: You will receive a WhatsApp and Email notification with a tracking link once your order is dispatched.
 
-7. Membership & Aura Rewards
-- Join our Aura Rewards program to earn 1 point for every $1 spent.
-- 100 points can be redeemed for a $10 discount on your next purchase.
-- Members get early access to sales and exclusive product drops.
+7. Aura Rewards India
+- Earn 5 Aura Points for every ₹100 spent.
+- 100 Points = ₹10 discount on future purchases.
+- Special birthday discounts for Silver and Gold tier members.

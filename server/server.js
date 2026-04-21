@@ -21,6 +21,10 @@ REQUIRED_ENV_VARS.forEach(varName => {
 const prisma = new PrismaClient();
 
 const app = express();
+
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy", service: "AuraStore Backend" });
+});
 const PORT = process.env.PORT; // Strict requirement
 const JWT_SECRET = process.env.JWT_SECRET;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;

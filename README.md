@@ -137,6 +137,7 @@ EMAILJS_PRIVATE_KEY=your_private_key
 - Backend: Render
 - Database: Neon Db PostgreSQL
 
+Note: Backend is hosted on a free-tier service and may take a few seconds to wake up on the first request after inactivity.
 
 ## 👨‍💻 Developer
 
